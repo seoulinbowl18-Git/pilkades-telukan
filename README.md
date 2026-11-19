@@ -75,7 +75,8 @@ Pengunjung bisa berpindah mode lewat tombol di banner. Fitur simulasi (1-klik co
    ```
    - Ganti `<PASSWORD_BARU>` dengan password user `soraya_render` dan `<CLUSTER_HOST>` dengan host cluster Anda.
    - Jika password mengandung karakter khusus `@ : / ? # [ ] %`, ubah dulu dengan URL-encode (misalnya `@` → `%40`).
-   - Untuk `mongodb+srv` di Atlas, `authSource=admin` sudah diatur otomatis. Jika muncul error autentikasi, tambahkan `&authSource=admin` di akhir URI.
+   - Aplikasi otomatis memakai `authSource=admin` (tempat user Atlas dibuat) jika tidak ditulis di URI. Ini juga berlaku untuk format `mongodb://` non-SRV, yang tanpa ini akan login ke database `/pilkades_telukan` dan gagal "bad auth".
+   - Spasi atau baris baru di awal/akhir, tanda kutip, prefix `MONGODB_URI=`, dan karakter khusus yang belum di-encode di username/password otomatis dirapikan di server tanpa mengubah env aslinya.
 6. Aplikasi selalu memakai database dari `MONGODB_DB` (default **`pilkades_telukan`**). Database dan koleksi `pemilih`, `otp_verifications`, dan `suara` beserta index-nya dibuat otomatis oleh `lib/mongodb.js` saat request pertama, jadi tidak perlu dibuat manual.
 
 ## 2. Menyiapkan Token Fonnte
@@ -94,6 +95,7 @@ Buka project **pilkades-telukan-grogol** di Vercel, lalu **Settings → Environm
 | `MONGODB_DB` | `pilkades_telukan` (default jika dikosongkan) | opsional |
 | `FONNTE_TOKEN` | Token device Fonnte | ✅ |
 | `ADMIN_PIN` | PIN Panel Panitia untuk API (default `1234`) | opsional, **disarankan** |
+| `MONGODB_AUTH_SOURCE` | Database autentikasi user (default `admin`, standar Atlas) | opsional, jarang diperlukan |
 
 Contoh lengkap (hanya placeholder) ada di [`.env.example`](.env.example). Centang *Sensitive* untuk `MONGODB_URI`, `FONNTE_TOKEN`, dan `ADMIN_PIN` agar nilainya tidak bisa dibaca ulang dari dashboard.
 
@@ -106,6 +108,27 @@ Setelan build project (Settings → Build & Deployment):
 - Build Command: *(kosong)*
 - Output Directory: *(kosong / root)*
 - Install Command: *(default `npm install`)*
+
+## Diagnosis Koneksi MongoDB (`/api/health`)
+
+Jika koneksi gagal, buka `https://<domain-anda>/api/health`. Respons **tidak pernah** berisi username, password, host, atau isi `MONGODB_URI`. Yang ditampilkan hanya kategori, kode error, dan petunjuk:
+
+```json
+"mongodb_error_detail": { "category": "AUTH_FAILED", "stage": "connect", "error_name": "MongoServerError", "code": 8000, "codeName": "AtlasError", "hint": "..." },
+"mongodb_uri_check": { "summary": { "scheme": "mongodb+srv", "credentials_present": true, "auth_source": "admin (default aplikasi)", "normalized": { "trimmed_whitespace": true } }, "issues": [] }
+```
+
+| `category` | Arti | Tindakan |
+|---|---|---|
+| `AUTH_FAILED` | Atlas menolak username/password (`bad auth`, code 8000/18). Jaringan sudah OK. | Reset password user `soraya_render` di Atlas → Database Access, tunggu ±1 menit, salin ulang ke `MONGODB_URI` (hapus tanda `< >`), lalu Redeploy. Pastikan user dibuat di **Project yang sama** dengan cluster. |
+| `NOT_AUTHORIZED` | Login berhasil tetapi user tidak punya izin (code 13). | Beri role `readWrite` pada `pilkades_telukan`. |
+| `URI_PLACEHOLDER` | URI masih berisi `<db_password>` / `<PASSWORD_BARU>` / `<CLUSTER_HOST>`. | Ganti dengan nilai asli. |
+| `URI_INVALID` | Format URI rusak atau terpotong. | Salin ulang connection string dari Atlas. |
+| `DNS_SRV_FAILED` | Host cluster tidak ditemukan (`ENOTFOUND`, `querySrv`). | Periksa host setelah `@` dan pastikan cluster tidak dihapus atau di-pause. |
+| `NETWORK_TIMEOUT` | Atlas tidak terjangkau (timeout / connection refused). | Cek IP Access List `0.0.0.0/0` dan status cluster *Active*. |
+| `TLS_FAILED` | Handshake TLS gagal. | Jangan menambahkan `tls=false` / `ssl=false`. |
+
+`stage` menunjukkan tahap kegagalan: `parse_uri`, `connect`, `create_indexes`, atau `ping`. `mongodb_uri_check.issues` berisi temuan format URI, misalnya `URI_ANGLE_BRACKETS`, `URI_PASSWORD_HAS_PERCENT`, atau `URI_SRV_HOST_INVALID`, masing-masing dengan petunjuknya.
 
 ## 4. Menjalankan Secara Lokal
 
