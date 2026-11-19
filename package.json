@@ -1,0 +1,13 @@
+{
+  "name": "pilkades-telukan",
+  "version": "1.0.0",
+  "private": true,
+  "description": "E-Pilkades Kelurahan Telukan, Grogol (Periode 2026-2034) - polling hiburan warga dengan MongoDB & OTP WhatsApp (Fonnte)",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "mongodb": "^6.10.0"
+  }
+}

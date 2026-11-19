@@ -6,7 +6,9 @@
   Fitur: registrasi WhatsApp, OTP simulasi, bilik suara 3 kandidat,
   statistik hasil, panel panitia (PIN demo 1234).
   Catatan: aplikasi ini hanya survei/polling hiburan warga, bukan
-  pemilihan resmi. Data tersimpan di localStorage browser.
+  pemilihan resmi.
+  Mode Online : data di MongoDB + OTP WhatsApp via Fonnte (folder api/).
+  Mode Demo   : fallback otomatis, data hanya di localStorage browser.
 -->
 <html lang="id">
 <head>
@@ -126,6 +128,9 @@
     <!-- MAIN CONTENT CONTAINER                                    -->
     <!-- ========================================================= -->
     <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6 pb-16">
+
+        <!-- Status Mode Data: Online (MongoDB + OTP WhatsApp Fonnte) / Demo Lokal -->
+        <div id="mode-banner" class="mb-5 hidden" role="status" aria-live="polite"></div>
 
         <!-- ======================================================= -->
         <!-- TAB 1: BERANDA                                          -->
@@ -344,7 +349,7 @@
                         </div>
 
                         <div class="pt-2 space-y-2.5">
-                            <button type="submit" class="cursor-pointer w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-md shadow-green-600/20 flex items-center justify-center gap-2 transition active:scale-[0.99]">
+                            <button type="submit" id="btn-register-submit" class="cursor-pointer w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-md shadow-green-600/20 flex items-center justify-center gap-2 transition active:scale-[0.99] disabled:opacity-60 disabled:cursor-wait">
                                 <i class="fa-brands fa-whatsapp text-xl"></i>
                                 <span>Daftar &amp; Dapatkan Token OTP</span>
                             </button>
@@ -358,8 +363,8 @@
                                 <i class="fa-solid fa-paper-plane"></i>
                             </div>
                             <div class="flex-1">
-                                <h3 class="font-bold text-slate-900 text-base">Pendaftaran WhatsApp Berhasil!</h3>
-                                <p class="text-xs text-slate-600 mt-0.5">
+                                <h3 id="otp-box-title" class="font-bold text-slate-900 text-base">Pendaftaran WhatsApp Berhasil!</h3>
+                                <p id="otp-box-desc" class="text-xs text-slate-600 mt-0.5">
                                     Klik tombol <strong>Verifikasi OTP Instan (Demo)</strong> untuk langsung mengaktifkan hak suara Anda, atau kirim pesan konfirmasi ke WhatsApp Panitia.
                                 </p>
                             </div>
@@ -381,8 +386,8 @@
                             </div>
                         </div>
 
-                        <!-- Token Display -->
-                        <div class="bg-white rounded-2xl p-4 border border-green-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <!-- Token Display (Mode Demo Lokal) -->
+                        <div id="otp-demo-token-box" class="bg-white rounded-2xl p-4 border border-green-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div>
                                 <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Kode Token / OTP Pemilih Anda</span>
                                 <span id="display-otp-code" class="font-mono text-2xl font-extrabold text-green-700 tracking-wider">KADES-0000</span>
@@ -393,8 +398,27 @@
                             </button>
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <!-- Input OTP dari WhatsApp (Mode Online: MongoDB + Fonnte) -->
+                        <form id="otp-online-panel" onsubmit="verifyOnlineOtp(event)" class="hidden bg-white rounded-2xl p-4 border border-green-200 space-y-3">
+                            <label for="otp-online-input" class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Masukkan 6 Digit Kode OTP dari WhatsApp</label>
+                            <div class="flex flex-col sm:flex-row gap-2.5">
+                                <input type="text" id="otp-online-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    class="flex-1 text-center tracking-[0.4em] font-mono text-2xl font-extrabold text-green-700 py-2.5 px-4 rounded-xl border border-slate-300 focus:border-green-600 focus:ring-2 focus:ring-green-600/20 outline-none">
+                                <button type="submit" id="btn-online-verify"
+                                    class="cursor-pointer inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-5 rounded-xl shadow-sm transition text-xs sm:text-sm disabled:opacity-60 disabled:cursor-wait">
+                                    <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                                    <span>Verifikasi OTP</span>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between gap-2 text-[11px] text-slate-500">
+                                <span id="otp-online-expiry">Kode berlaku 5 menit.</span>
+                                <button type="button" id="btn-online-resend" onclick="resendOnlineOtp()" class="cursor-pointer font-bold text-green-700 hover:underline disabled:text-slate-400 disabled:no-underline disabled:cursor-not-allowed">Kirim Ulang OTP</button>
+                            </div>
+                        </form>
+
+                        <!-- Action Buttons (Mode Demo Lokal) -->
+                        <div id="otp-demo-actions" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                             <a id="btn-wa-direct" href="#" target="_blank" rel="noopener noreferrer"
                                 class="cursor-pointer flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-3 px-4 rounded-xl shadow-sm transition text-xs sm:text-sm">
                                 <i class="fa-brands fa-whatsapp text-lg"></i>
@@ -431,7 +455,7 @@
                         <i class="fa-solid fa-lock"></i>
                     </div>
                     <h2 class="font-bold text-xl">Akses Bilik Suara Digital</h2>
-                    <p class="text-red-100 text-xs mt-1">Masukkan Nomor WhatsApp dan Token OTP terverifikasi</p>
+                    <p id="bilik-login-hint" class="text-red-100 text-xs mt-1">Masukkan Nomor WhatsApp dan Token OTP terverifikasi</p>
                 </div>
 
                 <form onsubmit="handleVoterLogin(event)" class="p-6 space-y-4">
@@ -456,7 +480,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="cursor-pointer w-full bg-garuda-700 hover:bg-garuda-800 text-white font-bold py-3.5 px-6 rounded-xl shadow-md transition active:scale-[0.99] flex items-center justify-center gap-2">
+                    <button type="submit" id="btn-bilik-login" class="cursor-pointer w-full bg-garuda-700 hover:bg-garuda-800 text-white font-bold py-3.5 px-6 rounded-xl shadow-md transition active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-wait">
                         <i class="fa-solid fa-door-open"></i>
                         <span>Buka Surat Suara</span>
                     </button>
@@ -750,7 +774,7 @@
                     <button type="button" onclick="closeModal('modal-confirm-vote')" class="cursor-pointer py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition">
                         Batal
                     </button>
-                    <button type="button" onclick="confirmVote()" class="cursor-pointer py-3 px-4 rounded-xl bg-garuda-700 hover:bg-garuda-800 text-white font-bold text-sm shadow-md transition">
+                    <button type="button" id="btn-confirm-vote" onclick="confirmVote()" class="cursor-pointer disabled:opacity-60 disabled:cursor-wait py-3 px-4 rounded-xl bg-garuda-700 hover:bg-garuda-800 text-white font-bold text-sm shadow-md transition">
                         Ya, Sah Coblos!
                     </button>
                 </div>
@@ -810,6 +834,20 @@
             var currentLoggedVoter = null;
             var selectedCandidateForVote = null;
             var isAdminAuthenticated = false;
+
+            // Mode data: 'online' (API /api/* + MongoDB + OTP WhatsApp Fonnte) atau 'demo' (localStorage)
+            var MODE_PREF_KEY = 'pilkades_telukan_mode_pref';
+            var API_TIMEOUT_MS = 15000;
+            var dataMode = 'demo';
+            var backendHealth = null;
+            var onlineStats = null;
+            var onlineVoters = [];
+            var onlineAdminPin = null;
+            var onlineRefreshInFlight = null;
+            var pendingOnlineReg = null;
+            var resendTimer = null;
+            var voteInFlight = false;
+            var originalOtpBoxText = null;
 
             /* ---------------------------------------------------------
              * 1. SAFE PWA MANIFEST INITIALIZATION
@@ -1087,6 +1125,9 @@
                 }
 
                 updateAllUI();
+                if (isOnline() && (tabName === 'beranda' || tabName === 'hasil' || tabName === 'admin')) {
+                    refreshOnlineData(false);
+                }
                 try {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 } catch (e) {
@@ -1145,6 +1186,317 @@
             }
 
             /* ---------------------------------------------------------
+             * 3B. LAPISAN API (MODE ONLINE: MONGODB + OTP WHATSAPP FONNTE)
+             * --------------------------------------------------------- */
+            function isOnline() {
+                return dataMode === 'online';
+            }
+
+            function readModePref() {
+                try { return localStorage.getItem(MODE_PREF_KEY); } catch (e) { return null; }
+            }
+
+            function writeModePref(value) {
+                try {
+                    if (value) localStorage.setItem(MODE_PREF_KEY, value);
+                    else localStorage.removeItem(MODE_PREF_KEY);
+                } catch (e) {
+                    // Abaikan jika localStorage dibatasi
+                }
+            }
+
+            function apiRequest(path, options) {
+                var opts = options || {};
+                var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+                var timer = controller ? setTimeout(function () { controller.abort(); }, opts.timeout || API_TIMEOUT_MS) : null;
+                var headers = { 'Accept': 'application/json' };
+                if (opts.body) headers['Content-Type'] = 'application/json';
+                if (opts.headers) {
+                    for (var key in opts.headers) {
+                        if (Object.prototype.hasOwnProperty.call(opts.headers, key)) headers[key] = opts.headers[key];
+                    }
+                }
+
+                function fail(message, status, data) {
+                    var err = new Error(message);
+                    err.status = status || 0;
+                    err.code = data && data.code ? data.code : null;
+                    err.data = data || null;
+                    return err;
+                }
+
+                return fetch(path, {
+                    method: opts.method || 'GET',
+                    headers: headers,
+                    body: opts.body ? JSON.stringify(opts.body) : undefined,
+                    cache: 'no-store',
+                    signal: controller ? controller.signal : undefined
+                }).then(function (res) {
+                    return res.text().then(function (text) {
+                        var data = null;
+                        try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+                        if (!data) {
+                            throw fail('Server tidak merespons dengan benar (HTTP ' + res.status + '). Pastikan folder api/ ter-deploy di Vercel.', res.status, null);
+                        }
+                        if (!res.ok || data.ok === false) {
+                            throw fail(data.error || ('Permintaan gagal (HTTP ' + res.status + ').'), res.status, data);
+                        }
+                        return data;
+                    });
+                }, function (networkErr) {
+                    if (networkErr && networkErr.name === 'AbortError') {
+                        throw fail('Server terlalu lama merespons. Periksa koneksi internet Anda lalu coba lagi.', 0, null);
+                    }
+                    throw fail('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.', 0, null);
+                }).then(function (data) {
+                    if (timer) clearTimeout(timer);
+                    return data;
+                }, function (err) {
+                    if (timer) clearTimeout(timer);
+                    throw err;
+                });
+            }
+
+            function setBusy(btnId, busy) {
+                var btn = document.getElementById(btnId);
+                if (!btn) return;
+                btn.disabled = Boolean(busy);
+                if (busy) btn.setAttribute('aria-busy', 'true');
+                else btn.removeAttribute('aria-busy');
+            }
+
+            function formatDateTime(value) {
+                var d = value ? new Date(value) : null;
+                if (!d || isNaN(d.getTime())) return '-';
+                return d.toLocaleString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'Asia/Jakarta'
+                }) + ' WIB';
+            }
+
+            function describeBackendIssue() {
+                if (backendHealth === null) {
+                    return 'Memeriksa koneksi server...';
+                }
+                if (!backendHealth.reachable) {
+                    return 'Server API tidak terjangkau (misalnya file dibuka langsung, atau folder api/ belum ter-deploy).';
+                }
+                if (backendHealth.missing_env && backendHealth.missing_env.length > 0) {
+                    return 'Server belum dikonfigurasi: ' + backendHealth.missing_env.join(' & ') + ' belum diatur di Vercel Environment Variables.';
+                }
+                if (backendHealth.mongodb_configured && !backendHealth.mongodb_connected) {
+                    return backendHealth.mongodb_error || 'Gagal terhubung ke MongoDB.';
+                }
+                if (backendHealth.online_ready) {
+                    return 'Mode Demo dipilih secara manual.';
+                }
+                return 'Server online belum siap.';
+            }
+
+            function renderModeBanner() {
+                var el = document.getElementById('mode-banner');
+                if (!el) return;
+                var html;
+                if (isOnline()) {
+                    html = '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 text-emerald-950 rounded-2xl px-4 py-3">' +
+                        '<div class="flex items-start gap-3">' +
+                            '<i class="fa-solid fa-database text-emerald-600 mt-0.5"></i>' +
+                            '<div class="text-xs leading-relaxed">' +
+                                '<p class="font-bold text-sm">Mode Online Aktif</p>' +
+                                '<p>Data pemilih &amp; suara tersimpan di MongoDB. Kode OTP dikirim langsung ke WhatsApp Anda (Fonnte).</p>' +
+                            '</div>' +
+                        '</div>' +
+                        '<button type="button" onclick="toggleDataMode()" class="cursor-pointer shrink-0 self-start sm:self-center px-3 py-2 rounded-xl bg-white hover:bg-emerald-100 border border-emerald-300 text-emerald-800 text-[11px] font-bold transition">' +
+                            '<i class="fa-solid fa-flask mr-1"></i> Pakai Mode Demo Lokal' +
+                        '</button>' +
+                    '</div>';
+                } else {
+                    html = '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50 border border-amber-200 text-amber-950 rounded-2xl px-4 py-3">' +
+                        '<div class="flex items-start gap-3">' +
+                            '<i class="fa-solid fa-flask text-amber-600 mt-0.5"></i>' +
+                            '<div class="text-xs leading-relaxed">' +
+                                '<p class="font-bold text-sm">Mode Demo Lokal</p>' +
+                                '<p>Data simulasi hanya tersimpan di browser ini. ' + escapeHtml(describeBackendIssue()) + '</p>' +
+                            '</div>' +
+                        '</div>' +
+                        '<button type="button" onclick="toggleDataMode()" class="cursor-pointer shrink-0 self-start sm:self-center px-3 py-2 rounded-xl bg-white hover:bg-amber-100 border border-amber-300 text-amber-900 text-[11px] font-bold transition">' +
+                            '<i class="fa-solid fa-plug mr-1"></i> Coba Mode Online' +
+                        '</button>' +
+                    '</div>';
+                }
+                el.innerHTML = html;
+                el.classList.remove('hidden');
+            }
+
+            function applyModeUI() {
+                var online = isOnline();
+                var hint = document.getElementById('bilik-login-hint');
+                if (hint) {
+                    hint.textContent = online
+                        ? 'Masukkan Nomor WhatsApp dan 6 digit OTP yang dikirim ke WhatsApp Anda'
+                        : 'Masukkan Nomor WhatsApp dan Token OTP terverifikasi';
+                }
+                var loginOtp = document.getElementById('login-otp');
+                if (loginOtp) {
+                    loginOtp.placeholder = online ? 'Contoh: 482910 (6 digit dari WA)' : 'Contoh: KADES-4821';
+                    loginOtp.setAttribute('inputmode', online ? 'numeric' : 'text');
+                }
+                var regBtn = document.getElementById('btn-register-submit');
+                var regLabel = regBtn ? regBtn.querySelector('span') : null;
+                if (regLabel) {
+                    regLabel.textContent = online ? 'Daftar & Kirim OTP ke WhatsApp' : 'Daftar & Dapatkan Token OTP';
+                }
+            }
+
+            function setDataMode(mode, silent) {
+                var changed = dataMode !== mode;
+                dataMode = mode;
+
+                if (changed) {
+                    // Sesi & panel dari mode sebelumnya tidak berlaku di mode baru
+                    pendingOnlineReg = null;
+                    lastRegisteredWa = null;
+                    onlineStats = null;
+                    onlineVoters = [];
+                    onlineAdminPin = null;
+                    if (resendTimer) { clearInterval(resendTimer); resendTimer = null; }
+                    var otpBox = document.getElementById('otp-verification-box');
+                    if (otpBox) otpBox.classList.add('hidden');
+                    logoutBilik();
+                    if (isAdminAuthenticated) {
+                        isAdminAuthenticated = false;
+                        document.getElementById('admin-dashboard').classList.add('hidden');
+                        document.getElementById('admin-lock-screen').classList.remove('hidden');
+                    }
+                }
+
+                renderModeBanner();
+                applyModeUI();
+
+                if (isOnline()) {
+                    updateAllUI();
+                    refreshOnlineData(false);
+                } else {
+                    updateAllUI();
+                }
+
+                if (!silent) {
+                    showToast(isOnline()
+                        ? 'Mode Online aktif: data tersimpan di MongoDB & OTP dikirim via WhatsApp.'
+                        : 'Mode Demo Lokal aktif: data simulasi hanya tersimpan di browser ini.', 'info');
+                }
+            }
+
+            function detectBackend() {
+                if (window.location.protocol === 'file:') {
+                    backendHealth = { reachable: false };
+                    setDataMode('demo', true);
+                    return Promise.resolve(backendHealth);
+                }
+                return apiRequest('/api/health', { timeout: 10000 }).then(function (health) {
+                    backendHealth = health;
+                    backendHealth.reachable = true;
+                    return health;
+                }, function () {
+                    backendHealth = { reachable: false };
+                    return backendHealth;
+                }).then(function (health) {
+                    var pref = readModePref();
+                    if (health.online_ready && pref !== 'demo') {
+                        setDataMode('online', true);
+                    } else {
+                        setDataMode('demo', true);
+                        if (health.reachable && !health.online_ready) {
+                            showToast('Server online belum siap — aplikasi berjalan di Mode Demo Lokal. ' + describeBackendIssue(), 'warning');
+                        }
+                    }
+                    return health;
+                });
+            }
+
+            function toggleDataMode() {
+                if (isOnline()) {
+                    writeModePref('demo');
+                    setDataMode('demo', false);
+                    return;
+                }
+                writeModePref(null);
+                showToast('Memeriksa koneksi server (MongoDB & Fonnte)...', 'info');
+                detectBackend().then(function (health) {
+                    if (health && health.online_ready) {
+                        showToast('Mode Online aktif: data tersimpan di MongoDB & OTP dikirim via WhatsApp.', 'success');
+                    } else if (!health || !health.reachable) {
+                        showToast('Mode Online belum tersedia. ' + describeBackendIssue(), 'error');
+                    }
+                });
+            }
+
+            function refreshOnlineData(withToast) {
+                if (!isOnline()) return Promise.resolve(null);
+                if (onlineRefreshInFlight) return onlineRefreshInFlight;
+
+                var headers = {};
+                if (isAdminAuthenticated && onlineAdminPin) headers['x-admin-pin'] = onlineAdminPin;
+
+                onlineRefreshInFlight = apiRequest('/api/results', { headers: headers }).then(function (data) {
+                    if (!isOnline()) return null;
+                    onlineStats = data;
+                    if (Array.isArray(data.voters)) onlineVoters = data.voters;
+                    updateAllUI();
+                    if (withToast) showToast('Data perolehan suara diperbarui dari server.', 'info');
+                    return data;
+                }, function (err) {
+                    if (withToast) showToast('Gagal memuat hasil dari server: ' + err.message, 'error');
+                    return null;
+                }).then(function (result) {
+                    onlineRefreshInFlight = null;
+                    return result;
+                });
+                return onlineRefreshInFlight;
+            }
+
+            // Kandidat untuk tampilan: profil dari state lokal, jumlah suara dari server saat Mode Online
+            function getDisplayCandidates() {
+                if (!isOnline()) return appState.candidates;
+                var votesById = {};
+                if (onlineStats && Array.isArray(onlineStats.candidates)) {
+                    for (var i = 0; i < onlineStats.candidates.length; i++) {
+                        votesById[onlineStats.candidates[i].kandidat_id] = onlineStats.candidates[i].votes;
+                    }
+                }
+                return appState.candidates.map(function (c) {
+                    var copy = {};
+                    for (var k in c) {
+                        if (Object.prototype.hasOwnProperty.call(c, k)) copy[k] = c[k];
+                    }
+                    copy.votes = votesById[c.id] || 0;
+                    return copy;
+                });
+            }
+
+            function startOnlineSession(resp) {
+                var p = resp.pemilih || {};
+                currentLoggedVoter = {
+                    name: p.nama_lengkap || '-',
+                    wa: normalizeWaNumber(p.no_wa),
+                    address: p.rt_rw || '-',
+                    otp: '',
+                    verified: true,
+                    hasVoted: false,
+                    votedAt: null,
+                    receiptId: null,
+                    online: true,
+                    sessionToken: resp.session_token
+                };
+                lastRegisteredWa = currentLoggedVoter.wa;
+                return currentLoggedVoter;
+            }
+
+            /* ---------------------------------------------------------
              * 4. REGISTRASI WHATSAPP & SIMULASI CEPAT
              * --------------------------------------------------------- */
             function normalizeWaNumber(raw) {
@@ -1195,6 +1547,17 @@
             }
 
             function fillDemoRegistration() {
+                if (isOnline()) {
+                    var demoOnline = createRandomDemoVoter(false);
+                    var n = document.getElementById('reg-name');
+                    var a = document.getElementById('reg-address');
+                    var w = document.getElementById('reg-wa');
+                    if (n) n.value = demoOnline.name.replace(' (Warga Simulasi)', '');
+                    if (a) a.value = demoOnline.address;
+                    if (w) { w.value = ''; w.focus(); }
+                    showToast('Mode Online: nama & alamat contoh terisi. Isi Nomor WhatsApp aktif milik Anda sendiri karena OTP dikirim sungguhan.', 'warning');
+                    return;
+                }
                 var demo = createRandomDemoVoter(false);
                 var nameInput = document.getElementById('reg-name');
                 var waInput = document.getElementById('reg-wa');
@@ -1225,6 +1588,11 @@
                     return;
                 }
 
+                if (isOnline()) {
+                    registerOnline({ name: name, wa: wa, address: address });
+                    return;
+                }
+
                 var existing = appState.voters.find(function (v) { return v.wa === wa; });
                 if (existing) {
                     showToast('Nomor WA +62' + wa + ' sudah terdaftar atas nama ' + existing.name + ' (Token: ' + existing.otp + ').', 'warning');
@@ -1249,7 +1617,142 @@
                 showToast('Pendaftaran WhatsApp berhasil! Klik Verifikasi OTP Instan untuk lanjut.', 'success');
             }
 
+            function registerOnline(reg) {
+                pendingOnlineReg = reg;
+                setBusy('btn-register-submit', true);
+                setBusy('btn-online-resend', true);
+                apiRequest('/api/send-otp', {
+                    method: 'POST',
+                    body: { nama_lengkap: reg.name, no_wa: '62' + reg.wa, rt_rw: reg.address }
+                }).then(function (resp) {
+                    showOnlineOtpBox(reg, resp.expires_in);
+                    startResendCountdown(resp.resend_after || 60);
+                    showToast(resp.message || 'OTP telah dikirim ke WhatsApp Anda.', 'success');
+                }, function (err) {
+                    if (err.code === 'COOLDOWN') {
+                        showOnlineOtpBox(reg, null);
+                        startResendCountdown((err.data && err.data.retry_after) || 60);
+                        showToast(err.message, 'warning');
+                    } else {
+                        setBusy('btn-online-resend', false);
+                        showToast(err.message, err.code === 'ALREADY_VOTED' ? 'warning' : 'error');
+                    }
+                }).then(function () {
+                    setBusy('btn-register-submit', false);
+                });
+            }
+
+            function resendOnlineOtp() {
+                if (!pendingOnlineReg) {
+                    showToast('Silakan isi form pendaftaran terlebih dahulu.', 'warning');
+                    return;
+                }
+                registerOnline(pendingOnlineReg);
+            }
+
+            function startResendCountdown(seconds) {
+                var btn = document.getElementById('btn-online-resend');
+                if (!btn) return;
+                if (resendTimer) clearInterval(resendTimer);
+                var remaining = Math.max(1, Math.round(seconds));
+                btn.disabled = true;
+                btn.textContent = 'Kirim Ulang (' + remaining + 'd)';
+                resendTimer = setInterval(function () {
+                    remaining--;
+                    if (remaining <= 0) {
+                        clearInterval(resendTimer);
+                        resendTimer = null;
+                        btn.disabled = false;
+                        btn.textContent = 'Kirim Ulang OTP';
+                        return;
+                    }
+                    btn.textContent = 'Kirim Ulang (' + remaining + 'd)';
+                }, 1000);
+            }
+
+            function setOtpBoxVariant(online) {
+                var title = document.getElementById('otp-box-title');
+                var desc = document.getElementById('otp-box-desc');
+                if (!originalOtpBoxText && title && desc) {
+                    originalOtpBoxText = { title: title.textContent, desc: desc.innerHTML };
+                }
+                var demoToken = document.getElementById('otp-demo-token-box');
+                var demoActions = document.getElementById('otp-demo-actions');
+                var onlinePanel = document.getElementById('otp-online-panel');
+                if (demoToken) demoToken.classList.toggle('hidden', online);
+                if (demoActions) demoActions.classList.toggle('hidden', online);
+                if (onlinePanel) onlinePanel.classList.toggle('hidden', !online);
+                if (!online && originalOtpBoxText) {
+                    title.textContent = originalOtpBoxText.title;
+                    desc.innerHTML = originalOtpBoxText.desc;
+                }
+            }
+
+            function showOnlineOtpBox(reg, expiresIn) {
+                lastRegisteredWa = reg.wa;
+                setOtpBoxVariant(true);
+                document.getElementById('summary-reg-name').textContent = reg.name;
+                document.getElementById('summary-reg-wa').textContent = '+62 ' + reg.wa;
+                document.getElementById('summary-reg-address').textContent = reg.address;
+                document.getElementById('otp-box-title').textContent = 'Kode OTP Dikirim ke WhatsApp Anda';
+                document.getElementById('otp-box-desc').textContent = 'Buka WhatsApp di nomor +62 ' + reg.wa + ', lalu masukkan 6 digit kode OTP di bawah ini untuk mengaktifkan hak pilih.';
+
+                var minutes = expiresIn ? Math.round(expiresIn / 60) : 5;
+                var expiryEl = document.getElementById('otp-online-expiry');
+                if (expiryEl) expiryEl.textContent = 'Kode berlaku ' + minutes + ' menit. Belum menerima pesan?';
+
+                var onlinePanel = document.getElementById('otp-online-panel');
+                if (onlinePanel) onlinePanel.classList.remove('hidden');
+                var goBilikWrap = document.getElementById('btn-go-bilik-wrap');
+                if (goBilikWrap) goBilikWrap.classList.add('hidden');
+
+                var input = document.getElementById('otp-online-input');
+                if (input) input.value = '';
+                document.getElementById('otp-verification-box').classList.remove('hidden');
+                if (input) {
+                    try { input.focus(); } catch (e) { /* abaikan */ }
+                }
+            }
+
+            function verifyOnlineOtp(event) {
+                if (event) event.preventDefault();
+                if (!pendingOnlineReg) {
+                    showToast('Silakan isi form pendaftaran terlebih dahulu.', 'warning');
+                    return;
+                }
+                var input = document.getElementById('otp-online-input');
+                var otp = input ? input.value.replace(/[^0-9]/g, '') : '';
+                if (otp.length !== 6) {
+                    showToast('Masukkan 6 digit kode OTP dari WhatsApp.', 'error');
+                    return;
+                }
+
+                setBusy('btn-online-verify', true);
+                apiRequest('/api/verify-otp', {
+                    method: 'POST',
+                    body: { no_wa: '62' + pendingOnlineReg.wa, otp: otp }
+                }).then(function (resp) {
+                    var voter = startOnlineSession(resp);
+                    if (resendTimer) { clearInterval(resendTimer); resendTimer = null; }
+                    document.getElementById('otp-online-panel').classList.add('hidden');
+                    document.getElementById('otp-box-title').textContent = 'OTP Terverifikasi!';
+                    document.getElementById('otp-box-desc').textContent = 'Hak pilih untuk ' + voter.name + ' sudah aktif. Klik tombol di bawah untuk masuk ke Bilik Suara.';
+                    document.getElementById('btn-go-bilik-wrap').classList.remove('hidden');
+                    showToast(resp.message || 'Verifikasi OTP berhasil.', 'success');
+                    refreshOnlineData(false);
+                }, function (err) {
+                    showToast(err.message, err.code === 'ALREADY_VOTED' ? 'warning' : 'error');
+                    if (err.code === 'OTP_LOCKED' || err.code === 'OTP_EXPIRED' || err.code === 'OTP_USED') {
+                        var resendBtn = document.getElementById('btn-online-resend');
+                        if (resendBtn && !resendTimer) resendBtn.disabled = false;
+                    }
+                }).then(function () {
+                    setBusy('btn-online-verify', false);
+                });
+            }
+
             function showOtpBoxForVoter(voter) {
+                setOtpBoxVariant(false);
                 lastRegisteredWa = voter.wa;
                 document.getElementById('summary-reg-name').textContent = voter.name;
                 document.getElementById('summary-reg-wa').textContent = '+62 ' + voter.wa;
@@ -1292,6 +1795,10 @@
             }
 
             function verifyInstantOtp() {
+                if (isOnline()) {
+                    showToast('Mode Online: masukkan 6 digit kode OTP yang dikirim ke WhatsApp Anda.', 'info');
+                    return;
+                }
                 var voter = null;
                 if (lastRegisteredWa) {
                     voter = appState.voters.find(function (v) { return v.wa === lastRegisteredWa; });
@@ -1313,6 +1820,17 @@
             }
 
             function proceedRegisteredVoterToBilik() {
+                if (isOnline()) {
+                    if (!currentLoggedVoter || !currentLoggedVoter.online || !currentLoggedVoter.sessionToken) {
+                        showToast('Sesi tidak ditemukan. Silakan verifikasi OTP WhatsApp terlebih dahulu.', 'warning');
+                        return;
+                    }
+                    var sessionVoter = currentLoggedVoter;
+                    document.getElementById('login-wa').value = sessionVoter.wa;
+                    switchTab('bilik');
+                    showBallotPanel(sessionVoter);
+                    return;
+                }
                 var voter = appState.voters.find(function (v) { return v.wa === lastRegisteredWa; });
                 if (!voter) {
                     quickSimVote();
@@ -1349,6 +1867,11 @@
 
             // 1-Klik Simulasi Cepat: Otomatis mendaftarkan pemilih baru terverifikasi & membuka Bilik Suara
             function quickSimVote() {
+                if (isOnline()) {
+                    showToast('Simulasi 1-klik hanya tersedia di Mode Demo Lokal. Di Mode Online, silakan daftar & verifikasi OTP WhatsApp.', 'info');
+                    switchTab('daftar');
+                    return;
+                }
                 var simVoter = createRandomDemoVoter(true);
                 appState.voters.unshift(simVoter);
                 lastRegisteredWa = simVoter.wa;
@@ -1372,6 +1895,28 @@
                 if (event) event.preventDefault();
                 var wa = normalizeWaNumber(document.getElementById('login-wa').value.trim());
                 var otp = document.getElementById('login-otp').value.trim().toUpperCase();
+
+                if (isOnline()) {
+                    var otpDigits = otp.replace(/[^0-9]/g, '');
+                    if (wa.length < 9 || otpDigits.length !== 6) {
+                        showToast('Masukkan Nomor WhatsApp terdaftar dan 6 digit OTP dari WhatsApp. Belum punya OTP? Minta di tab Daftar WA.', 'error');
+                        return;
+                    }
+                    setBusy('btn-bilik-login', true);
+                    apiRequest('/api/verify-otp', {
+                        method: 'POST',
+                        body: { no_wa: '62' + wa, otp: otpDigits }
+                    }).then(function (resp) {
+                        var sessionVoter = startOnlineSession(resp);
+                        showBallotPanel(sessionVoter);
+                        showToast('Selamat datang, ' + sessionVoter.name + '. Silakan pilih kandidat Anda.', 'success');
+                    }, function (err) {
+                        showToast(err.message, err.code === 'ALREADY_VOTED' ? 'warning' : 'error');
+                    }).then(function () {
+                        setBusy('btn-bilik-login', false);
+                    });
+                    return;
+                }
 
                 var voter = appState.voters.find(function (v) {
                     return v.wa === wa && v.otp === otp;
@@ -1497,8 +2042,49 @@
                 openModal('modal-confirm-vote');
             }
 
+            function confirmVoteOnline() {
+                if (voteInFlight) return;
+                var voter = currentLoggedVoter;
+                var cand = selectedCandidateForVote;
+                if (!voter.sessionToken) {
+                    closeModal('modal-confirm-vote');
+                    showToast('Sesi bilik suara berakhir. Silakan verifikasi OTP ulang.', 'error');
+                    logoutBilik();
+                    return;
+                }
+                voteInFlight = true;
+                setBusy('btn-confirm-vote', true);
+                apiRequest('/api/vote', {
+                    method: 'POST',
+                    body: { no_wa: '62' + voter.wa, session_token: voter.sessionToken, kandidat_id: cand.id }
+                }).then(function (resp) {
+                    voter.hasVoted = true;
+                    voter.votedAt = formatDateTime(resp.voted_at);
+                    voter.receiptId = resp.receipt_id;
+                    voter.sessionToken = null;
+                    closeModal('modal-confirm-vote');
+                    showReceiptPanel(voter);
+                    showToast('Suara Anda untuk No. Urut ' + cand.number + ' berhasil direkam di server!', 'success');
+                    refreshOnlineData(false);
+                }, function (err) {
+                    closeModal('modal-confirm-vote');
+                    showToast(err.message, err.code === 'ALREADY_VOTED' ? 'warning' : 'error');
+                    if (err.code === 'ALREADY_VOTED' || err.code === 'SESSION_INVALID' || err.code === 'NOT_VERIFIED' || err.code === 'NO_SESSION') {
+                        logoutBilik();
+                    }
+                }).then(function () {
+                    voteInFlight = false;
+                    setBusy('btn-confirm-vote', false);
+                });
+            }
+
             function confirmVote() {
                 if (!currentLoggedVoter || !selectedCandidateForVote) return;
+
+                if (isOnline()) {
+                    confirmVoteOnline();
+                    return;
+                }
 
                 var voterIdx = appState.voters.findIndex(function (v) { return v.wa === currentLoggedVoter.wa; });
                 var candIdx = appState.candidates.findIndex(function (c) { return c.id === selectedCandidateForVote.id; });
@@ -1537,19 +2123,33 @@
              * 6. REAL-TIME RESULTS & DASHBOARD STATS
              * --------------------------------------------------------- */
             function refreshResults() {
+                if (isOnline()) {
+                    refreshOnlineData(true);
+                    return;
+                }
                 updateAllUI();
                 showToast('Data perolehan suara diperbarui.', 'info');
             }
 
             function updateAllUI() {
+                var displayCandidates = getDisplayCandidates();
                 var totalVotes = 0;
-                for (var i = 0; i < appState.candidates.length; i++) {
-                    totalVotes += appState.candidates[i].votes;
+                for (var i = 0; i < displayCandidates.length; i++) {
+                    totalVotes += displayCandidates[i].votes;
                 }
 
-                var verifiedCount = appState.voters.filter(function (v) { return v.verified; }).length;
-                var totalDptDisplay = 150 + verifiedCount;
-                var participation = totalDptDisplay > 0 ? Math.min(100, Math.round((totalVotes / totalDptDisplay) * 100)) : 0;
+                var totalDptDisplay;
+                var participation;
+                if (isOnline()) {
+                    var verifiedOnline = onlineStats ? onlineStats.total_verified : 0;
+                    var votedOnline = onlineStats ? onlineStats.total_voted : 0;
+                    totalDptDisplay = verifiedOnline;
+                    participation = verifiedOnline > 0 ? Math.min(100, Math.round((votedOnline / verifiedOnline) * 100)) : 0;
+                } else {
+                    var verifiedCount = appState.voters.filter(function (v) { return v.verified; }).length;
+                    totalDptDisplay = 150 + verifiedCount;
+                    participation = totalDptDisplay > 0 ? Math.min(100, Math.round((totalVotes / totalDptDisplay) * 100)) : 0;
+                }
 
                 var elDpt = document.getElementById('stat-total-dpt');
                 var elVoted = document.getElementById('stat-total-voted');
@@ -1561,21 +2161,22 @@
                 if (elPart) elPart.textContent = participation + '%';
                 if (elHasilTotal) elHasilTotal.textContent = totalVotes;
 
-                renderResultsChart(totalVotes);
+                renderResultsChart(totalVotes, displayCandidates);
 
                 if (isAdminAuthenticated) {
                     renderAdminPanel();
                 }
             }
 
-            function renderResultsChart(totalVotes) {
+            function renderResultsChart(totalVotes, cands) {
+                cands = cands || appState.candidates;
                 var container = document.getElementById('results-chart-container');
                 if (!container) return;
 
                 var maxVotes = 0;
-                for (var i = 0; i < appState.candidates.length; i++) {
-                    if (appState.candidates[i].votes > maxVotes) {
-                        maxVotes = appState.candidates[i].votes;
+                for (var i = 0; i < cands.length; i++) {
+                    if (cands[i].votes > maxVotes) {
+                        maxVotes = cands[i].votes;
                     }
                 }
 
@@ -1586,8 +2187,8 @@
                 };
 
                 var html = '';
-                for (var j = 0; j < appState.candidates.length; j++) {
-                    var cand = appState.candidates[j];
+                for (var j = 0; j < cands.length; j++) {
+                    var cand = cands[j];
                     var pct = totalVotes > 0 ? ((cand.votes / totalVotes) * 100).toFixed(1) : '0.0';
                     var isLeading = cand.votes === maxVotes && maxVotes > 0;
 
@@ -1636,6 +2237,27 @@
                 var pinInput = document.getElementById('admin-pin-input');
                 var pin = pinInput ? pinInput.value.trim() : '';
 
+                if (isOnline()) {
+                    if (!pin) {
+                        showToast('Masukkan PIN Panitia.', 'error');
+                        return;
+                    }
+                    apiRequest('/api/results', { headers: { 'x-admin-pin': pin } }).then(function (data) {
+                        isAdminAuthenticated = true;
+                        onlineAdminPin = pin;
+                        onlineStats = data;
+                        onlineVoters = Array.isArray(data.voters) ? data.voters : [];
+                        if (pinInput) pinInput.value = '';
+                        document.getElementById('admin-lock-screen').classList.add('hidden');
+                        document.getElementById('admin-dashboard').classList.remove('hidden');
+                        updateAllUI();
+                        showToast('Berhasil masuk ke Panel Panitia (data MongoDB).', 'success');
+                    }, function (err) {
+                        showToast(err.status === 401 ? 'PIN Panitia salah! Gunakan PIN demo: 1234.' : err.message, 'error');
+                    });
+                    return;
+                }
+
                 if (pin === '1234') {
                     isAdminAuthenticated = true;
                     if (pinInput) pinInput.value = '';
@@ -1650,12 +2272,18 @@
 
             function logoutAdmin() {
                 isAdminAuthenticated = false;
+                onlineAdminPin = null;
+                onlineVoters = [];
                 document.getElementById('admin-dashboard').classList.add('hidden');
                 document.getElementById('admin-lock-screen').classList.remove('hidden');
                 showToast('Panel Panitia dikunci.', 'info');
             }
 
             function adminSimulateVotes() {
+                if (isOnline()) {
+                    showToast('Simulasi +10 suara hanya tersedia di Mode Demo Lokal. Data MongoDB tidak diubah.', 'warning');
+                    return;
+                }
                 var nowStr = new Date().toLocaleString('id-ID', {
                     day: '2-digit',
                     month: 'short',
@@ -1680,6 +2308,10 @@
             }
 
             function adminVerifyVoter(index) {
+                if (isOnline()) {
+                    showToast('Di Mode Online, verifikasi dilakukan oleh pemilih melalui OTP WhatsApp.', 'info');
+                    return;
+                }
                 if (appState.voters[index]) {
                     appState.voters[index].verified = true;
                     saveState();
@@ -1688,6 +2320,10 @@
             }
 
             function adminResetConfirm() {
+                if (isOnline()) {
+                    showToast('Reset data hanya untuk Mode Demo Lokal. Data MongoDB dikelola langsung di MongoDB Atlas.', 'warning');
+                    return;
+                }
                 openModal('modal-reset');
             }
 
@@ -1799,16 +2435,31 @@
                 var tbody = document.getElementById('admin-voters-tbody');
                 var countBadge = document.getElementById('admin-voter-count');
 
+                var online = isOnline();
+                var voterList = online
+                    ? onlineVoters.map(function (ov) {
+                        return {
+                            name: ov.nama_lengkap || '-',
+                            wa: normalizeWaNumber(ov.no_wa),
+                            address: ov.rt_rw || '-',
+                            otp: 'OTP via WA',
+                            verified: Boolean(ov.is_verified),
+                            hasVoted: Boolean(ov.has_voted)
+                        };
+                    })
+                    : appState.voters;
+
                 if (countBadge) {
-                    countBadge.textContent = appState.voters.length + ' Pendaftar';
+                    var registeredCount = online && onlineStats ? onlineStats.total_registered : voterList.length;
+                    countBadge.textContent = registeredCount + ' Pendaftar';
                 }
 
                 if (tbody) {
                     var rowsHtml = '';
                     var matchCount = 0;
 
-                    for (var i = 0; i < appState.voters.length; i++) {
-                        var v = appState.voters[i];
+                    for (var i = 0; i < voterList.length; i++) {
+                        var v = voterList[i];
                         var matches = !query ||
                             v.name.toLowerCase().indexOf(query) !== -1 ||
                             v.wa.indexOf(query) !== -1 ||
@@ -1837,7 +2488,9 @@
                                     : '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600">Belum Coblos</span>') +
                             '</td>' +
                             '<td class="py-3.5 px-4 text-right">' +
-                                (!v.verified
+                                (!v.verified && online
+                                    ? '<span class="text-xs text-amber-600 font-medium">Menunggu OTP</span>'
+                                    : !v.verified
                                     ? '<button type="button" onclick="adminVerifyVoter(' + i + ')" class="cursor-pointer px-3 py-1.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition shadow-sm">Verifikasi WA</button>'
                                     : '<span class="text-xs text-slate-400 font-medium">Aktif</span>') +
                             '</td>' +
@@ -1853,6 +2506,7 @@
                 var editorGrid = document.getElementById('admin-candidates-editor');
                 if (!editorGrid) return;
 
+                var displayCands = getDisplayCandidates();
                 var cardsHtml = '';
                 for (var k = 0; k < appState.candidates.length; k++) {
                     var c = appState.candidates[k];
@@ -1863,7 +2517,7 @@
                         '<div class="space-y-3">' +
                             '<div class="flex items-center justify-between">' +
                                 '<span class="font-extrabold text-sm text-garuda-700">Kandidat No. ' + escapeHtml(c.number) + '</span>' +
-                                '<span class="text-xs font-bold text-slate-500">' + c.votes + ' Suara</span>' +
+                                '<span class="text-xs font-bold text-slate-500">' + (displayCands[k] ? displayCands[k].votes : c.votes) + ' Suara</span>' +
                             '</div>' +
                             '<div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center gap-3">' +
                                 '<div>' + renderAvatarImg(c, 'w-14 h-14', '') + '</div>' +
@@ -1949,6 +2603,9 @@
             window.adminHandlePhotoUpload = adminHandlePhotoUpload;
             window.adminResetPhoto = adminResetPhoto;
             window.renderAdminPanel = renderAdminPanel;
+            window.verifyOnlineOtp = verifyOnlineOtp;
+            window.resendOnlineOtp = resendOnlineOtp;
+            window.toggleDataMode = toggleDataMode;
 
             /* ---------------------------------------------------------
              * 10. BOOTSTRAP APPLICATION
@@ -1956,8 +2613,17 @@
             function bootApp() {
                 initPWA();
                 loadState();
+                renderModeBanner();
                 updateAllUI();
                 startCountdown();
+                detectBackend();
+
+                // Auto-refresh hasil dari server tiap 30 detik saat Mode Online & tab terlihat
+                setInterval(function () {
+                    if (isOnline() && (!document.visibilityState || document.visibilityState === 'visible')) {
+                        refreshOnlineData(false);
+                    }
+                }, 30000);
             }
 
             if (document.readyState === 'loading') {
