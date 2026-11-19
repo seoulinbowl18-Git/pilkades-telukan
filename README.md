@@ -57,20 +57,26 @@ Pengunjung bisa berpindah mode lewat tombol di banner. Fitur simulasi (1-klik co
 
 ---
 
-## 1. Membuat Cluster & Connection String di MongoDB Atlas
+## 1. Membuat Cluster, User `soraya_render` & Connection String di MongoDB Atlas
 
-1. Masuk ke <https://cloud.mongodb.com> dan buat Project baru (misalnya `pilkades-telukan`).
+> 🔒 **Password database tidak boleh di-commit ke Git.** Password asli hanya diisi di **Vercel → Environment Variables**, atau di `.env.local` saat develop lokal (file ini sudah di-ignore oleh Git). Di repository hanya ada placeholder seperti `<PASSWORD_BARU>`. Jika password pernah terlanjur ter-commit atau dibagikan, segera **ganti password** user tersebut di Atlas.
+
+1. Masuk ke <https://cloud.mongodb.com>, lalu buat Project (misalnya `pilkades-telukan`).
 2. **Create Cluster**: pilih paket **M0 (Free)** dan region terdekat (misalnya *Singapore / ap-southeast-1*).
-3. **Database Access → Add New Database User**:
-   - Metode *Password*. Buat username & password yang kuat; hindari karakter `@ : / ?`, atau gunakan URL-encode.
-   - Role: **Read and write to any database**.
-4. **Network Access → Add IP Address**: pilih **Allow Access from Anywhere** (`0.0.0.0/0`). Ini diperlukan karena IP Vercel Serverless berubah-ubah.
-5. **Database → Connect → Drivers → Node.js**, lalu salin connection string, contoh:
+3. **Security → Database Access → Add New Database User**:
+   - Authentication Method: *Password*.
+   - Username: **`soraya_render`**.
+   - Password: klik *Autogenerate Secure Password* (atau buat sendiri yang kuat), lalu simpan di password manager. Jangan tulis di kode atau chat.
+   - Database User Privileges: **Read and write to any database**, atau lebih ketat: *Specific Privileges* → `readWrite` pada database `pilkades_telukan`.
+4. **Security → Network Access (IP Access List) → Add IP Address**: pilih **Allow Access from Anywhere** sehingga tercatat **`0.0.0.0/0`**. Ini wajib karena IP Vercel Serverless berubah-ubah. Tanpa langkah ini, `/api/health` akan menunjukkan `mongodb_connected: false`.
+5. **Database → Connect → Drivers → Node.js**: salin host cluster (bagian setelah `@`, misalnya `cluster0.abcde.mongodb.net`), lalu susun `MONGODB_URI` dengan format:
    ```
-   mongodb+srv://USERNAME:PASSWORD@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+   mongodb+srv://soraya_render:<PASSWORD_BARU>@<CLUSTER_HOST>/pilkades_telukan?retryWrites=true&w=majority
    ```
-   Ganti `USERNAME` dan `PASSWORD` dengan user yang dibuat di langkah 3.
-6. Database `pilkades_telukan` dan ketiga koleksinya akan terbentuk otomatis saat aplikasi pertama kali dipakai.
+   - Ganti `<PASSWORD_BARU>` dengan password user `soraya_render` dan `<CLUSTER_HOST>` dengan host cluster Anda.
+   - Jika password mengandung karakter khusus `@ : / ? # [ ] %`, ubah dulu dengan URL-encode (misalnya `@` → `%40`).
+   - Untuk `mongodb+srv` di Atlas, `authSource=admin` sudah diatur otomatis. Jika muncul error autentikasi, tambahkan `&authSource=admin` di akhir URI.
+6. Aplikasi selalu memakai database dari `MONGODB_DB` (default **`pilkades_telukan`**). Database dan koleksi `pemilih`, `otp_verifications`, dan `suara` beserta index-nya dibuat otomatis oleh `lib/mongodb.js` saat request pertama, jadi tidak perlu dibuat manual.
 
 ## 2. Menyiapkan Token Fonnte
 
@@ -84,10 +90,12 @@ Buka project **pilkades-telukan-grogol** di Vercel, lalu **Settings → Environm
 
 | Name | Value | Wajib |
 |---|---|---|
-| `MONGODB_URI` | Connection string dari MongoDB Atlas | ✅ |
+| `MONGODB_URI` | `mongodb+srv://soraya_render:<PASSWORD_BARU>@<CLUSTER_HOST>/pilkades_telukan?retryWrites=true&w=majority` (isi password & host asli) | ✅ |
 | `MONGODB_DB` | `pilkades_telukan` (default jika dikosongkan) | opsional |
 | `FONNTE_TOKEN` | Token device Fonnte | ✅ |
 | `ADMIN_PIN` | PIN Panel Panitia untuk API (default `1234`) | opsional, **disarankan** |
+
+Contoh lengkap (hanya placeholder) ada di [`.env.example`](.env.example). Centang *Sensitive* untuk `MONGODB_URI`, `FONNTE_TOKEN`, dan `ADMIN_PIN` agar nilainya tidak bisa dibaca ulang dari dashboard.
 
 > 🔐 PIN demo `1234` tertulis terbuka di halaman. Siapa pun yang memakainya bisa melihat nama & nomor WA pemilih lewat Panel Panitia. Jika aplikasi dipakai warga sungguhan, isi `ADMIN_PIN` dengan PIN rahasia lalu bagikan hanya ke panitia. Tombol "Isi PIN Demo 1234" tidak akan berfungsi lagi, dan itu memang disengaja.
 
@@ -103,7 +111,7 @@ Setelan build project (Settings → Build & Deployment):
 
 ```bash
 npm install
-cp .env.example .env.local   # isi nilai asli
+cp .env.example .env.local   # isi nilai asli (file ini di-ignore Git, jangan di-commit)
 npx vercel dev               # http://localhost:3000 (frontend + /api)
 ```
 
@@ -117,7 +125,8 @@ Jika `index.html` dibuka langsung tanpa server (atau dengan `python3 -m http.ser
    { "mongodb_configured": true, "mongodb_connected": true, "fonnte_configured": true, "online_ready": true, "missing_env": [] }
    ```
    - `missing_env` berisi nama variabel berarti env belum diatur, atau deployment belum di-redeploy.
-   - `mongodb_connected: false` berarti ada yang salah di connection string, user/password, atau Network Access Atlas.
+   - `mongodb_connected: false` berarti ada yang salah di connection string, password user `soraya_render`, atau IP Access List Atlas (harus ada `0.0.0.0/0`).
+   - `mongodb_db` harus bernilai `pilkades_telukan`.
 3. Buka halaman utama. Banner hijau **"Mode Online Aktif"** harus muncul.
 4. **Daftar WA**: isi nama, nomor WA aktif, dan RT/RW. Pesan OTP harus masuk ke WhatsApp. Masukkan OTP, lalu klik **Lanjut ke Bilik Suara**, pilih kandidat, dan konfirmasi. Tanda bukti `VOTE-XXXXXXXX` akan tampil.
 5. Coba daftar ulang dengan nomor yang sama. Harus muncul pesan *"sudah menggunakan hak pilih"*.
