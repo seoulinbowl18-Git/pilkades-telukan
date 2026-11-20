@@ -47,7 +47,7 @@ Mode dipilih otomatis berdasarkan `/api/health`. Fitur simulasi (1-klik coblos, 
 
 Footer terdiri dari tiga bagian: disclaimer survei hiburan (huruf besar), banner merah bergelombang, dan strip marun. Footer tidak mengatasnamakan panitia (P2KD) kelurahan.
 - **Banner:** foto Kantor Kepala Desa Telukan, ilustrasi kotak suara (SVG), judul pemilihan, slogan, dan 3 ikon nilai (Transparan, Aman, Bersama Membangun Desa).
-- **Strip marun:** lokasi, tautan website, dan slogan desa.
+- **Strip marun:** lokasi, keterangan "* ini bukan hasil Resmi, ini Survei", dan slogan desa.
 - **Ikon:** Lucide disematkan sebagai SVG inline, tanpa library tambahan.
 - **Gaya:** gaya khusus footer ada di blok `<style>` dengan prefix `.sf-`.
 - **Foto:** untuk mengganti foto kiri dengan foto gapura, ubah `src` gambar di footer (lihat komentar di `index.html`), misalnya ke `/assets/footer-gapura-telukan.jpg`.
