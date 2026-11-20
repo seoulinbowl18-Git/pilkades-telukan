@@ -129,9 +129,6 @@
     <!-- ========================================================= -->
     <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6 pb-16">
 
-        <!-- Status Mode Data: Online (MongoDB + OTP WhatsApp Fonnte) / Demo Lokal -->
-        <div id="mode-banner" class="mb-5 hidden" role="status" aria-live="polite"></div>
-
         <!-- ======================================================= -->
         <!-- TAB 1: BERANDA                                          -->
         <!-- ======================================================= -->
@@ -1297,41 +1294,6 @@
                 return 'Server online belum siap.';
             }
 
-            function renderModeBanner() {
-                var el = document.getElementById('mode-banner');
-                if (!el) return;
-                var html;
-                if (isOnline()) {
-                    html = '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 text-emerald-950 rounded-2xl px-4 py-3">' +
-                        '<div class="flex items-start gap-3">' +
-                            '<i class="fa-solid fa-database text-emerald-600 mt-0.5"></i>' +
-                            '<div class="text-xs leading-relaxed">' +
-                                '<p class="font-bold text-sm">Mode Online Aktif</p>' +
-                                '<p>Data pemilih &amp; suara tersimpan di MongoDB. Kode OTP dikirim langsung ke WhatsApp Anda (Fonnte).</p>' +
-                            '</div>' +
-                        '</div>' +
-                        '<button type="button" onclick="toggleDataMode()" class="cursor-pointer shrink-0 self-start sm:self-center px-3 py-2 rounded-xl bg-white hover:bg-emerald-100 border border-emerald-300 text-emerald-800 text-[11px] font-bold transition">' +
-                            '<i class="fa-solid fa-flask mr-1"></i> Pakai Mode Demo Lokal' +
-                        '</button>' +
-                    '</div>';
-                } else {
-                    html = '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50 border border-amber-200 text-amber-950 rounded-2xl px-4 py-3">' +
-                        '<div class="flex items-start gap-3">' +
-                            '<i class="fa-solid fa-flask text-amber-600 mt-0.5"></i>' +
-                            '<div class="text-xs leading-relaxed">' +
-                                '<p class="font-bold text-sm">Mode Demo Lokal</p>' +
-                                '<p>Data simulasi hanya tersimpan di browser ini. ' + escapeHtml(describeBackendIssue()) + '</p>' +
-                            '</div>' +
-                        '</div>' +
-                        '<button type="button" onclick="toggleDataMode()" class="cursor-pointer shrink-0 self-start sm:self-center px-3 py-2 rounded-xl bg-white hover:bg-amber-100 border border-amber-300 text-amber-900 text-[11px] font-bold transition">' +
-                            '<i class="fa-solid fa-plug mr-1"></i> Coba Mode Online' +
-                        '</button>' +
-                    '</div>';
-                }
-                el.innerHTML = html;
-                el.classList.remove('hidden');
-            }
-
             function applyModeUI() {
                 var online = isOnline();
                 var hint = document.getElementById('bilik-login-hint');
@@ -1374,7 +1336,6 @@
                     }
                 }
 
-                renderModeBanner();
                 applyModeUI();
 
                 if (isOnline()) {
@@ -2613,7 +2574,6 @@
             function bootApp() {
                 initPWA();
                 loadState();
-                renderModeBanner();
                 updateAllUI();
                 startCountdown();
                 detectBackend();

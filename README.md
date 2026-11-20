@@ -8,14 +8,14 @@ Web app PWA polling warga dengan registrasi Nomor WhatsApp, OTP WhatsApp (via [F
 
 ## Fitur & Mode Data
 
-Aplikasi otomatis memilih mode saat dibuka (status tampil di banner atas halaman):
+Aplikasi otomatis memilih mode saat dibuka (tanpa banner di halaman; status bisa dicek di `/api/health`):
 
 | Mode | Kapan aktif | Penyimpanan | OTP |
 |---|---|---|---|
 | **Mode Online** | `/api/health` siap: `MONGODB_URI` & `FONNTE_TOKEN` diatur dan MongoDB terhubung | MongoDB Atlas | 6 digit, dikirim ke WhatsApp via Fonnte, berlaku 5 menit |
 | **Mode Demo Lokal** | Env belum diatur, server tidak terjangkau, file dibuka langsung, atau dipilih manual | `localStorage` browser | Simulasi `KADES-XXXX` + tombol Verifikasi Instan |
 
-Pengunjung bisa berpindah mode lewat tombol di banner. Fitur simulasi (1-klik coblos, +10 suara acak, reset data) hanya berjalan di Mode Demo sehingga tidak mengotori data MongoDB.
+Mode dipilih otomatis berdasarkan `/api/health`. Fitur simulasi (1-klik coblos, +10 suara acak, reset data) hanya berjalan di Mode Demo sehingga tidak mengotori data MongoDB.
 
 **Keamanan Mode Online**
 - `FONNTE_TOKEN` & `MONGODB_URI` hanya dibaca di server (folder `api/`), tidak pernah dikirim ke browser.
@@ -150,7 +150,7 @@ Jika `index.html` dibuka langsung tanpa server (atau dengan `python3 -m http.ser
    - `missing_env` berisi nama variabel berarti env belum diatur, atau deployment belum di-redeploy.
    - `mongodb_connected: false` berarti ada yang salah di connection string, password user `soraya_render`, atau IP Access List Atlas (harus ada `0.0.0.0/0`).
    - `mongodb_db` harus bernilai `pilkades_telukan`.
-3. Buka halaman utama. Banner hijau **"Mode Online Aktif"** harus muncul.
+3. Buka halaman utama, lalu tab **Daftar WA**. Tombol registrasi harus bertuliskan **"Daftar & Kirim OTP ke WhatsApp"** (tanda Mode Online aktif).
 4. **Daftar WA**: isi nama, nomor WA aktif, dan RT/RW. Pesan OTP harus masuk ke WhatsApp. Masukkan OTP, lalu klik **Lanjut ke Bilik Suara**, pilih kandidat, dan konfirmasi. Tanda bukti `VOTE-XXXXXXXX` akan tampil.
 5. Coba daftar ulang dengan nomor yang sama. Harus muncul pesan *"sudah menggunakan hak pilih"*.
 6. **Hasil**: total suara bertambah. **Panitia**: masukkan PIN, dan daftar pemilih dari MongoDB akan tampil.
