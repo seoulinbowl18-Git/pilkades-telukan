@@ -1076,7 +1076,7 @@
                 {
                     id: 2,
                     number: '02',
-                    name: 'Hesti Rahmawati, M.Pd.',
+                    name: 'Hesti Kartika Asmara',
                     tagline: 'Bersama Warga Wujudkan Desa Cerdas & Peduli',
                     photo: getDefaultAvatarDataUrl('02'),
                     visi: 'Menjadikan Kelurahan Telukan, Grogol sebagai wilayah percontohan yang unggul di bidang pendidikan, kesehatan ibu-anak, dan lingkungan hijau.',
@@ -1091,7 +1091,7 @@
                 {
                     id: 3,
                     number: '03',
-                    name: 'Hj Pratama',
+                    name: 'Hj Trihadi Hari',
                     tagline: 'Inovasi Pemuda untuk Kemajuan Ekonomi Desa',
                     photo: getDefaultAvatarDataUrl('03'),
                     visi: 'Akselerasi pembangunan infrastruktur modern, ketahanan pangan, dan penciptaan lapangan kerja bagi generasi muda Kelurahan Telukan.',
@@ -1104,6 +1104,9 @@
                     accent: 'from-blue-800 to-blue-700'
                 }
             ];
+
+            // Nama kandidat bawaan versi sebelumnya (untuk migrasi data localStorage lama)
+            var LEGACY_DEFAULT_NAMES = ['Hesti Rahmawati, M.Pd.', 'Hj Pratama'];
 
             var defaultVoters = [
                 {
@@ -1169,10 +1172,12 @@
                         if (parsed && Array.isArray(parsed.candidates) && parsed.candidates.length === 3) {
                             appState.candidates = parsed.candidates.map(function (c, idx) {
                                 var base = defaultCandidates[idx];
+                                // Nama bawaan versi lama diganti otomatis; nama hasil edit panitia tetap dipertahankan
+                                var savedName = LEGACY_DEFAULT_NAMES.indexOf(c.name) !== -1 ? base.name : c.name;
                                 return {
                                     id: base.id,
                                     number: base.number,
-                                    name: c.name || base.name,
+                                    name: savedName || base.name,
                                     tagline: c.tagline || base.tagline,
                                     photo: c.photo || getDefaultAvatarDataUrl(base.number),
                                     visi: c.visi || base.visi,
