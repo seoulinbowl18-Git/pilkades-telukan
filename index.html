@@ -21,6 +21,8 @@
     <meta name="apple-mobile-web-app-title" content="Pilkades Telukan">
     <meta name="description" content="Aplikasi E-Voting Pilkades Digital Kelurahan Telukan, Grogol Periode 2026–2034 dengan Verifikasi WhatsApp">
     <link rel="manifest" id="pwa-manifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/logo-sukoharjo-192.png">
+    <link rel="apple-touch-icon" href="/assets/logo-sukoharjo-192.png">
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -68,11 +70,9 @@
     <header class="bg-gradient-to-r from-garuda-900 via-garuda-800 to-garuda-900 text-white shadow-lg sticky top-0 z-40">
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center shrink-0">
-                    <svg class="w-6 h-6 text-amber-300" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm0 3.18l6 3.33v4.49c0 3.97-2.66 7.72-6 8.83-3.34-1.11-6-4.86-6-8.83V8.51l6-3.33z"/>
-                        <circle cx="12" cy="12" r="3" class="text-white"/>
-                    </svg>
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden border border-white/20 shadow-sm shrink-0 bg-[#3b1314]">
+                    <img src="/assets/logo-sukoharjo.png" alt="Lambang Kabupaten Sukoharjo" width="44" height="44"
+                        class="w-full h-full object-contain" decoding="async">
                 </div>
                 <div class="truncate">
                     <div class="flex items-center gap-2">
@@ -867,12 +867,9 @@
                         return;
                     }
 
-                    var svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">' +
-                        '<rect width="512" height="512" rx="110" fill="#b91c1c"/>' +
-                        '<path d="M256 80L96 168v104c0 98.7 68.3 190.9 160 213.3 91.7-22.4 160-114.6 160-213.3V168L256 80z" fill="#ffffff" opacity="0.95"/>' +
-                        '<path d="M210 265l35 35 75-85" stroke="#b91c1c" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
-                        '</svg>';
-                    var iconUrl = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgIcon);
+                    // Manifest berupa data: URL, jadi path ikon harus absolut
+                    var icon192 = new URL('/assets/logo-sukoharjo-192.png', window.location.href).href;
+                    var icon512 = new URL('/assets/logo-sukoharjo-512.png', window.location.href).href;
 
                     var manifestObj = {
                         name: 'E-Voting Pilkades Digital Kelurahan Telukan, Grogol (2026–2034)',
@@ -883,8 +880,8 @@
                         background_color: '#f8fafc',
                         theme_color: '#b91c1c',
                         icons: [
-                            { src: iconUrl, sizes: '192x192', type: 'image/svg+xml' },
-                            { src: iconUrl, sizes: '512x512', type: 'image/svg+xml' }
+                            { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' },
+                            { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any' }
                         ]
                     };
 
