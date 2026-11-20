@@ -131,7 +131,7 @@
             </div>
         </div>
 
-        <!-- 5 Tab Navigasi: ikon di atas label pada HP, sejajar pada desktop -->
+        <!-- 4 Tab Navigasi: ikon di atas label pada HP, sejajar pada desktop. Panel Panitia diakses dari footer. -->
         <nav class="border-t border-slate-100" aria-label="Navigasi utama">
             <div class="max-w-5xl mx-auto px-1 sm:px-4 flex sm:gap-1">
                 <button type="button" onclick="switchTab('beranda')" id="tab-beranda" aria-current="page"
@@ -153,11 +153,6 @@
                     class="nav-btn group relative cursor-pointer flex-1 sm:flex-none min-w-0 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 sm:px-4 pt-2.5 pb-2 sm:py-3 min-h-[3.5rem] sm:min-h-0 text-[11px] max-[359px]:text-[10px] max-[359px]:tracking-tight sm:text-sm border-b-2 transition-colors font-semibold text-slate-500 border-transparent hover:text-garuda-700">
                     <i class="fa-solid fa-chart-column text-base sm:text-sm" aria-hidden="true"></i>
                     <span class="truncate max-w-full">Hasil</span>
-                </button>
-                <button type="button" onclick="switchTab('admin')" id="tab-admin"
-                    class="nav-btn group relative cursor-pointer flex-1 sm:flex-none min-w-0 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 sm:px-4 pt-2.5 pb-2 sm:py-3 min-h-[3.5rem] sm:min-h-0 text-[11px] max-[359px]:text-[10px] max-[359px]:tracking-tight sm:text-sm border-b-2 transition-colors font-semibold text-slate-500 border-transparent hover:text-garuda-700">
-                    <i class="fa-solid fa-user-gear text-base sm:text-sm" aria-hidden="true"></i>
-                    <span class="truncate max-w-full">Panitia</span>
                 </button>
             </div>
         </nav>
@@ -1073,6 +1068,16 @@
                 </div>
                 <div class="flex items-center justify-center py-3 sm:py-1 px-3 min-w-0">
                     <span class="sf-script text-lg sm:text-base md:text-lg lg:text-xl whitespace-nowrap">"Desa Maju, Warga Sejahtera"</span>
+                </div>
+            </div>
+            <!-- Akses Panel Panitia (dipindah dari tab navigasi atas) -->
+            <div class="border-t border-white/10">
+                <div class="max-w-6xl mx-auto px-4 py-3 flex justify-center sm:justify-end">
+                    <button type="button" id="footer-admin-link" onclick="switchTab('admin')"
+                        class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/25 bg-white/5 hover:bg-white/15 text-white/75 hover:text-white text-[11px] font-semibold transition-colors">
+                        <i class="fa-solid fa-user-gear text-[10px]" aria-hidden="true"></i>
+                        <span>Panel Panitia</span>
+                    </button>
                 </div>
             </div>
         </div>
