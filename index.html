@@ -269,6 +269,41 @@
                 </div>
             </div>
 
+            <!-- Perolehan Suara Sementara (Live Real Count) — versi Beranda.
+                 ID berakhiran -home; diisi oleh renderResultsChart() yang sama dengan tab Hasil. -->
+            <div id="home-results-card" class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="relative flex w-2.5 h-2.5">
+                                <span class="absolute inline-flex w-full h-full rounded-full bg-red-500 opacity-75 animate-ping"></span>
+                                <span class="relative inline-flex w-2.5 h-2.5 rounded-full bg-red-600"></span>
+                            </span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-garuda-600">Live Real Count</span>
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">Perolehan Suara Sementara</h3>
+                        <p class="text-xs sm:text-sm text-slate-500">Rekapitulasi otomatis berdasarkan suara sah Kelurahan Telukan, Grogol.</p>
+                    </div>
+                    <div class="flex items-center gap-3 shrink-0">
+                        <button type="button" onclick="refreshResults()" class="cursor-pointer px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span>Refresh</span>
+                        </button>
+                        <div class="bg-slate-50 px-4 py-2.5 rounded-2xl border border-slate-200/80 text-right">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Suara Sah</span>
+                            <span id="hasil-total-votes-home" class="text-2xl font-extrabold text-slate-900 tabular-nums">0</span>
+                            <span class="text-xs text-slate-500"> suara</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="results-chart-container-home" class="mt-5 space-y-4" aria-live="polite"></div>
+                <div class="mt-5 text-right">
+                    <button type="button" onclick="switchTab('hasil')" class="cursor-pointer text-xs font-bold text-garuda-700 hover:underline">
+                        Lihat Hasil &amp; Pesan Warga <i class="fa-solid fa-arrow-right ml-0.5"></i>
+                    </button>
+                </div>
+            </div>
+
             <!-- 3-Step Guide -->
             <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
                 <h3 class="font-bold text-lg text-slate-900 mb-4 flex items-center gap-2">
@@ -2265,6 +2300,8 @@
                 var elVoted = document.getElementById('stat-total-voted');
                 var elPart = document.getElementById('stat-participation');
                 var elHasilTotal = document.getElementById('hasil-total-votes');
+                var elHasilTotalHome = document.getElementById('hasil-total-votes-home');
+                if (elHasilTotalHome) elHasilTotalHome.textContent = totalVotes;
 
                 if (elDpt) elDpt.textContent = totalDptDisplay;
                 if (elVoted) elVoted.textContent = totalVotes;
@@ -2281,8 +2318,10 @@
 
             function renderResultsChart(totalVotes, cands) {
                 cands = cands || appState.candidates;
-                var container = document.getElementById('results-chart-container');
-                if (!container) return;
+                var containers = ['results-chart-container', 'results-chart-container-home']
+                    .map(function (id) { return document.getElementById(id); })
+                    .filter(Boolean);
+                if (!containers.length) return;
 
                 var maxVotes = 0;
                 for (var i = 0; i < cands.length; i++) {
@@ -2329,7 +2368,9 @@
                         '</div>' +
                     '</div>';
                 }
-                container.innerHTML = html;
+                for (var c = 0; c < containers.length; c++) {
+                    if (containers[c].innerHTML !== html) containers[c].innerHTML = html;
+                }
             }
 
             /* ---------------------------------------------------------
