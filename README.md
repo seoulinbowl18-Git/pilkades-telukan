@@ -1,6 +1,6 @@
 # E-Pilkades Digital — Kelurahan Telukan, Grogol (Periode 2026–2034)
 
-Web app PWA polling warga dengan registrasi Nomor WhatsApp, OTP WhatsApp (via [Fonnte](https://fonnte.com)), bilik suara 3 kandidat, statistik hasil real-time, dan Panel Panitia (PIN demo `1234`). Data tersimpan di **MongoDB Atlas**.
+Web app PWA polling warga dengan registrasi Nomor WhatsApp, OTP WhatsApp (via [Fonnte](https://fonnte.com)), bilik suara 3 kandidat, statistik hasil real-time, dan Panel Panitia (dilindungi PIN). Data tersimpan di **MongoDB Atlas**.
 
 > ⚠️ **Disclaimer:** Aplikasi ini **hanya survei/polling hiburan warga**, **bukan pemilihan resmi**. Hasilnya tidak memiliki kekuatan hukum apa pun.
 
@@ -119,7 +119,7 @@ Buka project **pilkades-telukan-grogol** di Vercel, lalu **Settings → Environm
 
 Contoh lengkap (hanya placeholder) ada di [`.env.example`](.env.example). Centang *Sensitive* untuk `MONGODB_URI`, `FONNTE_TOKEN`, dan `ADMIN_PIN` agar nilainya tidak bisa dibaca ulang dari dashboard.
 
-> 🔐 PIN demo `1234` tertulis terbuka di halaman. Siapa pun yang memakainya bisa melihat nama & nomor WA pemilih lewat Panel Panitia. Jika aplikasi dipakai warga sungguhan, isi `ADMIN_PIN` dengan PIN rahasia lalu bagikan hanya ke panitia. Tombol "Isi PIN Demo 1234" tidak akan berfungsi lagi, dan itu memang disengaja.
+> 🔐 PIN Panitia tidak lagi ditampilkan di halaman. Default-nya tetap `1234` (Mode Online: env `ADMIN_PIN`; Mode Demo: tertulis di kode `index.html`). Siapa pun yang mengetahui PIN bisa melihat nama & nomor WA pemilih, jadi isi `ADMIN_PIN` dengan PIN rahasia di Vercel dan bagikan hanya ke panitia.
 
 Setelah menyimpan env, lakukan **Redeploy** (Deployments → deployment terbaru → ⋯ → Redeploy), karena env baru hanya terbaca oleh deployment baru.
 

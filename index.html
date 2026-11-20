@@ -4,7 +4,7 @@
   Static single-file PWA web app (tanpa build step), di-deploy via Vercel
   dari GitHub: seoulinbowl18-Git/pilkades-telukan (branch main).
   Fitur: registrasi WhatsApp, OTP simulasi, bilik suara 3 kandidat,
-  statistik hasil, panel panitia (PIN demo 1234).
+  statistik hasil, panel panitia (dengan PIN).
   Catatan: aplikasi ini hanya survei/polling hiburan warga, bukan
   pemilihan resmi.
   Mode Online : data di MongoDB + OTP WhatsApp via Fonnte (folder api/).
@@ -692,14 +692,6 @@
                 <div>
                     <h2 class="font-bold text-xl text-slate-900">Panel Panitia Pilkades</h2>
                     <p class="text-xs text-slate-500 mt-1">Masukkan PIN Keamanan Panitia untuk mengelola pemilih &amp; kandidat.</p>
-                    <div class="mt-2.5 flex items-center justify-center gap-2 flex-wrap">
-                        <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-semibold">
-                            PIN Demo: <strong>1234</strong>
-                        </span>
-                        <button type="button" onclick="fillAdminPinDemo()" class="cursor-pointer px-3 py-1 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold transition">
-                            Isi PIN Demo 1234
-                        </button>
-                    </div>
                 </div>
 
                 <form onsubmit="handleAdminLogin(event)" class="space-y-3 pt-2">
@@ -2582,14 +2574,6 @@
             /* ---------------------------------------------------------
              * 7. PANEL PANITIA (ADMIN)
              * --------------------------------------------------------- */
-            function fillAdminPinDemo() {
-                var pinInput = document.getElementById('admin-pin-input');
-                if (pinInput) {
-                    pinInput.value = '1234';
-                }
-                handleAdminLogin(null);
-            }
-
             function handleAdminLogin(event) {
                 if (event) event.preventDefault();
                 var pinInput = document.getElementById('admin-pin-input');
@@ -2611,7 +2595,7 @@
                         updateAllUI();
                         showToast('Berhasil masuk ke Panel Panitia (data MongoDB).', 'success');
                     }, function (err) {
-                        showToast(err.status === 401 ? 'PIN Panitia salah! Gunakan PIN demo: 1234.' : err.message, 'error');
+                        showToast(err.status === 401 ? 'PIN Panitia salah!' : err.message, 'error');
                     });
                     return;
                 }
@@ -2624,7 +2608,7 @@
                     renderAdminPanel();
                     showToast('Berhasil masuk ke Panel Panitia.', 'success');
                 } else {
-                    showToast('PIN Panitia salah! Gunakan PIN demo: 1234.', 'error');
+                    showToast('PIN Panitia salah!', 'error');
                 }
             }
 
@@ -2977,7 +2961,6 @@
             window.openVisiModal = openVisiModal;
             window.closeModal = closeModal;
             window.refreshResults = refreshResults;
-            window.fillAdminPinDemo = fillAdminPinDemo;
             window.handleAdminLogin = handleAdminLogin;
             window.logoutAdmin = logoutAdmin;
             window.adminVerifyVoter = adminVerifyVoter;
