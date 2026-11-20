@@ -46,12 +46,15 @@ module.exports = async function handler(req, res) {
         }
 
         const receiptId = 'VOTE-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+        // Kunci rahasia untuk mengirim pesan warga (POST /api/messages); hanya hash yang disimpan
+        const messageToken = crypto.randomBytes(24).toString('hex');
 
         try {
             await suaraCol.insertOne({
                 no_wa: noWa,
                 kandidat_id: kandidatId,
                 receipt_id: receiptId,
+                message_token_hash: sha256(messageToken),
                 created_at: now
             });
         } catch (err) {
@@ -75,7 +78,8 @@ module.exports = async function handler(req, res) {
             message: 'Suara Anda berhasil direkam.',
             receipt_id: receiptId,
             kandidat_id: kandidatId,
-            voted_at: now.toISOString()
+            voted_at: now.toISOString(),
+            message_token: messageToken
         });
     } catch (err) {
         handleError(res, err);

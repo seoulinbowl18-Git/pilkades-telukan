@@ -588,6 +588,37 @@
                                 Selesai
                             </button>
                         </div>
+
+                        <!-- Pesan & Harapan Warga (setelah mencoblos) -->
+                        <form id="message-form" onsubmit="submitMessage(event)" class="hidden pt-4 border-t border-slate-100 space-y-2.5">
+                            <div>
+                                <label for="message-input" class="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+                                    <i class="fa-regular fa-comment-dots text-garuda-600"></i>
+                                    Pesan &amp; Harapan untuk Pilkades Telukan
+                                </label>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Tampil publik dengan nama tersamar (mis. "Budi S."). Nomor WhatsApp tidak ditampilkan.</p>
+                            </div>
+                            <textarea id="message-input" rows="3" maxlength="240" required
+                                oninput="updateMessageCounter()"
+                                placeholder="Contoh: Semoga kepala desa terpilih amanah dan jalan kampung segera diperbaiki."
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-garuda-600 focus:ring-2 focus:ring-garuda-600/20 outline-none text-sm resize-none"></textarea>
+                            <div class="flex items-center justify-between gap-3">
+                                <span id="message-counter" class="text-[11px] text-slate-400 tabular-nums">0 / 240</span>
+                                <button type="submit" id="btn-send-message"
+                                    class="cursor-pointer inline-flex items-center gap-1.5 bg-garuda-700 hover:bg-garuda-800 text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm transition disabled:opacity-60 disabled:cursor-wait">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                    <span>Kirim Pesan</span>
+                                </button>
+                            </div>
+                        </form>
+
+                        <div id="receipt-messages-wrap" class="hidden space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pesan Warga Terbaru</span>
+                                <button type="button" onclick="switchTab('hasil')" class="cursor-pointer text-[11px] font-bold text-garuda-700 hover:underline">Lihat semua</button>
+                            </div>
+                            <div id="messages-board-mini" class="space-y-2"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -622,6 +653,21 @@
 
                 <!-- Bar Chart Results Container -->
                 <div id="results-chart-container" class="mt-6 space-y-5"></div>
+            </div>
+
+            <!-- Papan Pesan & Harapan Warga -->
+            <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
+                    <div class="min-w-0">
+                        <h3 class="font-bold text-lg text-slate-900 flex items-center gap-2">
+                            <i class="fa-regular fa-comments text-garuda-600"></i>
+                            <span>Pesan &amp; Harapan Warga</span>
+                        </h3>
+                        <p class="text-xs text-slate-500">Dikirim oleh warga setelah mencoblos. Diperbarui otomatis.</p>
+                    </div>
+                    <span id="messages-count" class="self-start sm:self-center px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold whitespace-nowrap">0 Pesan</span>
+                </div>
+                <div id="messages-board" class="mt-4 space-y-2.5 max-h-[32rem] overflow-y-auto overscroll-contain pr-1"></div>
             </div>
         </section>
 
@@ -724,6 +770,18 @@
                             <tbody id="admin-voters-tbody" class="divide-y divide-slate-100 text-sm"></tbody>
                         </table>
                     </div>
+                </div>
+
+                <!-- Moderasi Pesan Warga -->
+                <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <h3 class="font-bold text-lg text-slate-900">Moderasi Pesan Warga</h3>
+                            <p class="text-xs text-slate-500">Hapus pesan yang tidak pantas. Pesan yang dihapus hilang dari papan publik.</p>
+                        </div>
+                        <span id="admin-messages-count" class="self-start sm:self-center px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold whitespace-nowrap">0 Pesan</span>
+                    </div>
+                    <div id="admin-messages-list" class="space-y-2.5 max-h-[28rem] overflow-y-auto overscroll-contain pr-1"></div>
                 </div>
             </div>
         </section>
@@ -864,6 +922,16 @@
             var pendingOnlineReg = null;
             var resendTimer = null;
             var voteInFlight = false;
+
+            // Pesan & Harapan Warga
+            var MESSAGE_MIN_LENGTH = 3;
+            var MESSAGE_MAX_LENGTH = 240;
+            var MESSAGE_MAX_PER_VOTER = 3;
+            var MESSAGE_COOLDOWN_MS = 60 * 1000;
+            var MESSAGES_POLL_MS = 12000;
+            var onlineMessages = [];
+            var messagesRefreshInFlight = null;
+            var messageSendInFlight = false;
             var originalOtpBoxText = null;
 
             /* ---------------------------------------------------------
@@ -1060,15 +1128,36 @@
                 }
             ];
 
+            var defaultMessages = [
+                {
+                    message_id: 'demo00000000msg1',
+                    author_wa: '81299887766',
+                    nama: 'Slamet R.',
+                    pesan: 'Semoga siapa pun yang terpilih tetap amanah dan memperhatikan jalan kampung serta saluran irigasi.',
+                    created_at: '2026-11-19T01:20:00.000Z',
+                    deleted: false
+                },
+                {
+                    message_id: 'demo00000000msg2',
+                    author_wa: '81200000001',
+                    nama: 'Warga Telukan',
+                    pesan: 'Ayo warga Telukan ikut polling hiburan ini, dibawa santai dan tetap rukun!',
+                    created_at: '2026-11-19T03:05:00.000Z',
+                    deleted: false
+                }
+            ];
+
             var appState = {
                 candidates: [],
-                voters: []
+                voters: [],
+                messages: []
             };
 
             function cloneDefaults() {
                 return {
                     candidates: JSON.parse(JSON.stringify(defaultCandidates)),
-                    voters: JSON.parse(JSON.stringify(defaultVoters))
+                    voters: JSON.parse(JSON.stringify(defaultVoters)),
+                    messages: JSON.parse(JSON.stringify(defaultMessages))
                 };
             }
 
@@ -1093,6 +1182,7 @@
                                 };
                             });
                             appState.voters = Array.isArray(parsed.voters) ? parsed.voters : JSON.parse(JSON.stringify(defaultVoters));
+                            appState.messages = Array.isArray(parsed.messages) ? parsed.messages : JSON.parse(JSON.stringify(defaultMessages));
                             return;
                         }
                     }
@@ -1141,6 +1231,9 @@
                 updateAllUI();
                 if (isOnline() && (tabName === 'beranda' || tabName === 'hasil' || tabName === 'admin')) {
                     refreshOnlineData(false);
+                }
+                if (tabName === 'hasil' || tabName === 'admin' || tabName === 'bilik') {
+                    refreshMessages(false);
                 }
                 try {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1342,6 +1435,7 @@
                     onlineStats = null;
                     onlineVoters = [];
                     onlineAdminPin = null;
+                    onlineMessages = [];
                     if (resendTimer) { clearInterval(resendTimer); resendTimer = null; }
                     var otpBox = document.getElementById('otp-verification-box');
                     if (otpBox) otpBox.classList.add('hidden');
@@ -1358,6 +1452,7 @@
                 if (isOnline()) {
                     updateAllUI();
                     refreshOnlineData(false);
+                    refreshMessages(false);
                 } else {
                     updateAllUI();
                 }
@@ -1951,10 +2046,14 @@
                 document.getElementById('receipt-name').textContent = voter.name;
                 document.getElementById('receipt-wa').textContent = '+62 ' + voter.wa;
                 document.getElementById('receipt-time').textContent = voter.votedAt || '-';
+                updateMessageFormVisibility(voter);
+                renderMessages();
+                refreshMessages(false);
             }
 
             function logoutBilik() {
                 currentLoggedVoter = null;
+                updateMessageFormVisibility(null);
                 selectedCandidateForVote = null;
                 document.getElementById('bilik-ballot-panel').classList.add('hidden');
                 document.getElementById('bilik-receipt-panel').classList.add('hidden');
@@ -2051,6 +2150,7 @@
                     voter.hasVoted = true;
                     voter.votedAt = formatDateTime(resp.voted_at);
                     voter.receiptId = resp.receipt_id;
+                    voter.messageToken = resp.message_token || null;
                     voter.sessionToken = null;
                     closeModal('modal-confirm-vote');
                     showReceiptPanel(voter);
@@ -2157,6 +2257,7 @@
                 if (elHasilTotal) elHasilTotal.textContent = totalVotes;
 
                 renderResultsChart(totalVotes, displayCandidates);
+                renderMessages();
 
                 if (isAdminAuthenticated) {
                     renderAdminPanel();
@@ -2214,6 +2315,258 @@
                     '</div>';
                 }
                 container.innerHTML = html;
+            }
+
+            /* ---------------------------------------------------------
+             * 6B. PESAN & HARAPAN WARGA (SETELAH MENCOBLOS)
+             * Mode Online: /api/messages (MongoDB, koleksi pesan_warga)
+             * Mode Demo  : appState.messages (localStorage)
+             * Nomor WA tidak pernah ditampilkan; nama disamarkan (mis. "Budi S.").
+             * --------------------------------------------------------- */
+            var PROFANITY_RE = /\b(anjing|anjir|bangsat|bajingan|babi|kontol|memek|ngentot|entot|goblok|goblog|tolol|jancok|jancuk|cok|asu|kampret|tai|taik|keparat|brengsek|idiot)\b/gi;
+            var LINK_RE = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|id|net|org|xyz|co|io|me|ly|info|biz|site|online)\b)/i;
+
+            function sanitizeMessageText(raw) {
+                var text = String(raw == null ? '' : raw)
+                    .replace(/[\u0000-\u0008\u000b-\u001f\u007f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g, '')
+                    .replace(/[<>]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                if (text.length > MESSAGE_MAX_LENGTH) {
+                    return { ok: false, error: 'Pesan terlalu panjang (maksimal ' + MESSAGE_MAX_LENGTH + ' karakter).' };
+                }
+                if (LINK_RE.test(text)) return { ok: false, error: 'Pesan tidak boleh berisi tautan/website.' };
+                text = text
+                    .replace(/(\+?\d[\d\s.-]{7,}\d)/g, '[nomor disembunyikan]')
+                    .replace(/(.)\1{5,}/g, '$1$1$1$1$1')
+                    .replace(PROFANITY_RE, function (w) { return w.charAt(0) + new Array(w.length).join('*'); });
+                var letters = (text.match(/[A-Za-zÀ-ÿ]/g) || []).length;
+                if (text.length < MESSAGE_MIN_LENGTH || letters < 2) {
+                    return { ok: false, error: 'Pesan terlalu pendek (minimal ' + MESSAGE_MIN_LENGTH + ' karakter).' };
+                }
+                if (text.length > MESSAGE_MAX_LENGTH) {
+                    return { ok: false, error: 'Pesan terlalu panjang (maksimal ' + MESSAGE_MAX_LENGTH + ' karakter).' };
+                }
+                return { ok: true, text: text };
+            }
+
+            function maskDisplayName(fullName) {
+                var parts = String(fullName || '').replace(/\(.*?\)/g, '').replace(/[^A-Za-zÀ-ÿ' .-]/g, ' ').trim().split(/\s+/).filter(Boolean);
+                if (!parts.length) return 'Warga Telukan';
+                var first = parts[0].slice(0, 16);
+                var initial = parts.length > 1 ? ' ' + parts[parts.length - 1].charAt(0).toUpperCase() + '.' : '';
+                return first.charAt(0).toUpperCase() + first.slice(1) + initial;
+            }
+
+            function timeAgo(iso) {
+                var t = new Date(iso).getTime();
+                if (isNaN(t)) return '';
+                var diff = Math.max(0, Math.round((Date.now() - t) / 1000));
+                if (diff < 45) return 'baru saja';
+                if (diff < 3600) return Math.round(diff / 60) + ' menit lalu';
+                if (diff < 86400) return Math.round(diff / 3600) + ' jam lalu';
+                if (diff < 7 * 86400) return Math.round(diff / 86400) + ' hari lalu';
+                return formatDateTime(iso);
+            }
+
+            function getVisibleMessages() {
+                var list = isOnline()
+                    ? onlineMessages.slice()
+                    : appState.messages.filter(function (m) { return !m.deleted; });
+                list.sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+                return list.slice(0, 50);
+            }
+
+            function renderMessageItem(m) {
+                var initial = escapeHtml((m.nama || 'W').charAt(0).toUpperCase());
+                return '<div class="flex gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 min-w-0">' +
+                    '<div class="w-9 h-9 rounded-full bg-garuda-100 text-garuda-700 font-extrabold text-sm flex items-center justify-center shrink-0">' + initial + '</div>' +
+                    '<div class="min-w-0 flex-1">' +
+                        '<div class="flex items-baseline justify-between gap-2">' +
+                            '<span class="font-bold text-xs sm:text-sm text-slate-900 truncate">' + escapeHtml(m.nama || 'Warga Telukan') + '</span>' +
+                            '<span class="text-[10px] text-slate-400 shrink-0">' + escapeHtml(timeAgo(m.created_at)) + '</span>' +
+                        '</div>' +
+                        '<p class="text-xs sm:text-sm text-slate-700 leading-relaxed mt-0.5 break-words [overflow-wrap:anywhere]">' + escapeHtml(m.pesan) + '</p>' +
+                    '</div>' +
+                '</div>';
+            }
+
+            function renderMessages() {
+                var list = getVisibleMessages();
+                var empty = '<p class="text-center text-xs text-slate-400 py-6">Belum ada pesan. Jadilah yang pertama setelah mencoblos!</p>';
+
+                var board = document.getElementById('messages-board');
+                if (board) board.innerHTML = list.length ? list.map(renderMessageItem).join('') : empty;
+
+                var mini = document.getElementById('messages-board-mini');
+                if (mini) mini.innerHTML = list.length ? list.slice(0, 5).map(renderMessageItem).join('') : empty;
+
+                var count = document.getElementById('messages-count');
+                if (count) count.textContent = list.length + ' Pesan';
+            }
+
+            function refreshMessages(withToast) {
+                if (!isOnline()) {
+                    renderMessages();
+                    return Promise.resolve(null);
+                }
+                if (messagesRefreshInFlight) return messagesRefreshInFlight;
+                messagesRefreshInFlight = apiRequest('/api/messages').then(function (data) {
+                    if (!isOnline()) return null;
+                    onlineMessages = Array.isArray(data.messages) ? data.messages : [];
+                    renderMessages();
+                    if (isAdminAuthenticated) renderAdminMessages();
+                    return data;
+                }, function (err) {
+                    if (withToast) showToast('Gagal memuat pesan warga: ' + err.message, 'error');
+                    return null;
+                }).then(function (r) {
+                    messagesRefreshInFlight = null;
+                    return r;
+                });
+                return messagesRefreshInFlight;
+            }
+
+            function canPostMessage(voter) {
+                if (!voter || !voter.hasVoted) return false;
+                if (isOnline()) return Boolean(voter.online && voter.messageToken && voter.receiptId);
+                return !voter.online;
+            }
+
+            function updateMessageFormVisibility(voter) {
+                var form = document.getElementById('message-form');
+                var wrap = document.getElementById('receipt-messages-wrap');
+                var show = canPostMessage(voter);
+                if (form) form.classList.toggle('hidden', !show);
+                if (wrap) wrap.classList.toggle('hidden', !voter);
+                if (show) updateMessageCounter();
+            }
+
+            function updateMessageCounter() {
+                var input = document.getElementById('message-input');
+                var counter = document.getElementById('message-counter');
+                if (input && counter) {
+                    var len = input.value.length;
+                    counter.textContent = len + ' / ' + MESSAGE_MAX_LENGTH;
+                    counter.classList.toggle('text-red-500', len > MESSAGE_MAX_LENGTH - 20);
+                }
+            }
+
+            function submitMessage(event) {
+                if (event) event.preventDefault();
+                var voter = currentLoggedVoter;
+                if (!canPostMessage(voter)) {
+                    showToast('Pesan hanya bisa dikirim setelah Anda mencoblos di Bilik Suara.', 'warning');
+                    return;
+                }
+                if (messageSendInFlight) return;
+                var input = document.getElementById('message-input');
+                var cleaned = sanitizeMessageText(input ? input.value : '');
+                if (!cleaned.ok) {
+                    showToast(cleaned.error, 'error');
+                    return;
+                }
+
+                if (!isOnline()) {
+                    var mine = appState.messages.filter(function (m) { return m.author_wa === voter.wa; })
+                        .sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+                    if (mine.length >= MESSAGE_MAX_PER_VOTER) {
+                        showToast('Batas ' + MESSAGE_MAX_PER_VOTER + ' pesan per pemilih sudah tercapai. Terima kasih atas partisipasinya!', 'warning');
+                        return;
+                    }
+                    if (mine[0] && Date.now() - new Date(mine[0].created_at).getTime() < MESSAGE_COOLDOWN_MS) {
+                        var wait = Math.ceil((MESSAGE_COOLDOWN_MS - (Date.now() - new Date(mine[0].created_at).getTime())) / 1000);
+                        showToast('Tunggu ' + wait + ' detik sebelum mengirim pesan berikutnya.', 'warning');
+                        return;
+                    }
+                    if (mine.some(function (m) { return String(m.pesan).toLowerCase() === cleaned.text.toLowerCase(); })) {
+                        showToast('Pesan yang sama sudah pernah Anda kirim.', 'warning');
+                        return;
+                    }
+                    appState.messages.unshift({
+                        message_id: 'demo' + Date.now().toString(16) + Math.floor(Math.random() * 1e6).toString(16),
+                        author_wa: voter.wa,
+                        nama: maskDisplayName(voter.name),
+                        pesan: cleaned.text,
+                        created_at: new Date().toISOString(),
+                        deleted: false
+                    });
+                    if (input) input.value = '';
+                    updateMessageCounter();
+                    saveState();
+                    showToast('Pesan Anda berhasil dikirim. Terima kasih!', 'success');
+                    return;
+                }
+
+                messageSendInFlight = true;
+                setBusy('btn-send-message', true);
+                apiRequest('/api/messages', {
+                    method: 'POST',
+                    body: { receipt_id: voter.receiptId, message_token: voter.messageToken, pesan: cleaned.text }
+                }).then(function (resp) {
+                    if (resp.data) {
+                        onlineMessages = [resp.data].concat(onlineMessages.filter(function (m) { return m.message_id !== resp.data.message_id; }));
+                    }
+                    if (input) input.value = '';
+                    updateMessageCounter();
+                    renderMessages();
+                    showToast(resp.message || 'Pesan Anda berhasil dikirim.', 'success');
+                }, function (err) {
+                    showToast(err.message, err.status === 429 || err.status === 409 ? 'warning' : 'error');
+                }).then(function () {
+                    messageSendInFlight = false;
+                    setBusy('btn-send-message', false);
+                });
+            }
+
+            function renderAdminMessages() {
+                var listEl = document.getElementById('admin-messages-list');
+                var countEl = document.getElementById('admin-messages-count');
+                if (!listEl) return;
+                var list = getVisibleMessages();
+                if (countEl) countEl.textContent = list.length + ' Pesan';
+                if (!list.length) {
+                    listEl.innerHTML = '<p class="text-center text-xs text-slate-400 py-6">Belum ada pesan warga.</p>';
+                    return;
+                }
+                listEl.innerHTML = list.map(function (m) {
+                    return '<div class="flex items-start gap-3 p-3 rounded-2xl border border-slate-200 bg-slate-50 min-w-0">' +
+                        '<div class="min-w-0 flex-1">' +
+                            '<div class="flex items-baseline gap-2 flex-wrap">' +
+                                '<span class="font-bold text-xs text-slate-900">' + escapeHtml(m.nama || 'Warga Telukan') + '</span>' +
+                                '<span class="text-[10px] text-slate-400">' + escapeHtml(timeAgo(m.created_at)) + '</span>' +
+                            '</div>' +
+                            '<p class="text-xs text-slate-700 mt-0.5 break-words [overflow-wrap:anywhere]">' + escapeHtml(m.pesan) + '</p>' +
+                        '</div>' +
+                        '<button type="button" data-message-id="' + escapeHtml(m.message_id) + '" onclick="adminDeleteMessage(this.getAttribute(\'data-message-id\'))" ' +
+                            'class="cursor-pointer shrink-0 px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-600 text-red-700 hover:text-white border border-red-200 text-[11px] font-bold transition">' +
+                            '<i class="fa-solid fa-trash-can mr-1"></i>Hapus</button>' +
+                    '</div>';
+                }).join('');
+            }
+
+            function adminDeleteMessage(messageId) {
+                if (!isAdminAuthenticated || !messageId) return;
+                if (!isOnline()) {
+                    var found = appState.messages.find(function (m) { return m.message_id === messageId; });
+                    if (found) {
+                        found.deleted = true;
+                        saveState();
+                        showToast('Pesan dihapus dari papan publik.', 'info');
+                    }
+                    return;
+                }
+                apiRequest('/api/messages?id=' + encodeURIComponent(messageId), {
+                    method: 'DELETE',
+                    headers: { 'x-admin-pin': onlineAdminPin || '' }
+                }).then(function () {
+                    onlineMessages = onlineMessages.filter(function (m) { return m.message_id !== messageId; });
+                    renderMessages();
+                    renderAdminMessages();
+                    showToast('Pesan dihapus dari papan publik.', 'info');
+                }, function (err) {
+                    showToast(err.message, 'error');
+                });
             }
 
             /* ---------------------------------------------------------
@@ -2501,6 +2854,8 @@
                 var editorGrid = document.getElementById('admin-candidates-editor');
                 if (!editorGrid) return;
 
+                renderAdminMessages();
+
                 var displayCands = getDisplayCandidates();
                 var cardsHtml = '';
                 for (var k = 0; k < appState.candidates.length; k++) {
@@ -2626,6 +2981,9 @@
             window.verifyOnlineOtp = verifyOnlineOtp;
             window.resendOnlineOtp = resendOnlineOtp;
             window.toggleDataMode = toggleDataMode;
+            window.submitMessage = submitMessage;
+            window.updateMessageCounter = updateMessageCounter;
+            window.adminDeleteMessage = adminDeleteMessage;
 
             /* ---------------------------------------------------------
              * 10. BOOTSTRAP APPLICATION
@@ -2636,6 +2994,16 @@
                 updateAllUI();
                 startCountdown();
                 detectBackend();
+
+                // Pesan warga: polling tiap ±12 detik saat halaman terlihat (Mode Online)
+                setInterval(function () {
+                    if (isOnline() && (!document.visibilityState || document.visibilityState === 'visible')) {
+                        refreshMessages(false);
+                    }
+                }, MESSAGES_POLL_MS);
+                document.addEventListener('visibilitychange', function () {
+                    if (document.visibilityState === 'visible') refreshMessages(false);
+                });
 
                 // Auto-refresh hasil dari server tiap 30 detik saat Mode Online & tab terlihat
                 setInterval(function () {
