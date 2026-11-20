@@ -15,9 +15,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>E-Voting Pilkades Digital • Kelurahan Telukan, Grogol (2026–2034)</title>
-    <meta name="theme-color" content="#b91c1c">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Pilkades Telukan">
     <meta name="description" content="Aplikasi E-Voting Pilkades Digital Kelurahan Telukan, Grogol Periode 2026–2034 dengan Verifikasi WhatsApp">
     <link rel="manifest" id="pwa-manifest">
@@ -67,58 +67,66 @@
     <!-- ========================================================= -->
     <!-- HEADER & NAVIGATION BAR                                   -->
     <!-- ========================================================= -->
-    <header class="bg-gradient-to-r from-garuda-900 via-garuda-800 to-garuda-900 text-white shadow-lg sticky top-0 z-40">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-[0_1px_0_rgba(15,23,42,0.03)]">
+        <!-- Aksen marun tipis -->
+        <div class="h-1 bg-gradient-to-r from-garuda-800 via-garuda-600 to-garuda-800" aria-hidden="true"></div>
+
+        <div class="max-w-5xl mx-auto px-4 py-3 sm:py-3.5 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden border border-white/20 shadow-sm shrink-0 bg-[#3b1314]">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden ring-1 ring-garuda-900/15 shadow-sm shrink-0 bg-[#3b1314]">
                     <img src="/assets/logo-sukoharjo.png" alt="Lambang Kabupaten Sukoharjo" width="44" height="44"
                         class="w-full h-full object-contain" decoding="async">
                 </div>
-                <div class="truncate">
-                    <div class="flex items-center gap-2">
-                        <h1 class="font-extrabold text-base sm:text-lg tracking-tight truncate">E-PILKADES DIGITAL</h1>
-                        <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 shrink-0">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>PWA Aktif
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <h1 class="font-extrabold text-[15px] sm:text-lg tracking-tight text-slate-900 truncate">E-PILKADES <span class="text-garuda-700">DIGITAL</span></h1>
+                        <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>PWA Aktif
                         </span>
                     </div>
-                    <p class="text-xs text-red-100/90 font-medium truncate">Kelurahan Telukan, Grogol • Periode 2026–2034</p>
+                    <p class="text-[11px] sm:text-xs text-slate-500 font-medium leading-snug sm:truncate">Kelurahan Telukan, Grogol <span class="hidden min-[400px]:inline">•</span><br class="min-[400px]:hidden"> Periode 2026–2034</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-                <button type="button" id="btn-install-pwa" onclick="triggerInstallPWA()" class="hidden cursor-pointer items-center gap-1.5 bg-white text-garuda-800 hover:bg-red-50 font-bold text-xs px-3 py-2 rounded-xl shadow-sm transition active:scale-95">
+                <button type="button" id="btn-install-pwa" onclick="triggerInstallPWA()" class="hidden cursor-pointer items-center gap-1.5 bg-garuda-700 hover:bg-garuda-800 text-white font-bold text-xs px-3 py-2 rounded-xl shadow-sm transition active:scale-95">
                     <i class="fa-solid fa-download"></i>
-                    <span>Install App</span>
+                    <span class="hidden min-[380px]:inline">Install App</span>
                 </button>
-                <div class="flex items-center gap-1.5 bg-black/25 px-2.5 py-1.5 rounded-xl text-xs text-red-100 border border-white/10">
-                    <i class="fa-solid fa-shield-halved text-amber-300"></i>
-                    <span class="hidden md:inline font-medium">Terenkripsi</span>
+                <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs text-slate-600 bg-slate-50 border border-slate-200" title="Koneksi terenkripsi (HTTPS)">
+                    <i class="fa-solid fa-shield-halved text-garuda-600"></i>
+                    <span class="hidden md:inline font-semibold">Terenkripsi</span>
                 </div>
             </div>
         </div>
 
-        <!-- 5 Responsive Navigation Tabs -->
-        <nav class="bg-garuda-950/50 backdrop-blur-md border-t border-white/10 overflow-x-auto">
-            <div class="max-w-5xl mx-auto px-2 flex justify-between sm:justify-start sm:gap-2">
-                <button type="button" onclick="switchTab('beranda')" id="tab-beranda" class="nav-btn cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-3 text-xs sm:text-sm font-bold border-b-2 border-white text-white transition whitespace-nowrap">
-                    <i class="fa-solid fa-house"></i>
-                    <span>Beranda</span>
+        <!-- 5 Tab Navigasi: ikon di atas label pada HP, sejajar pada desktop -->
+        <nav class="border-t border-slate-100" aria-label="Navigasi utama">
+            <div class="max-w-5xl mx-auto px-1 sm:px-4 flex sm:gap-1">
+                <button type="button" onclick="switchTab('beranda')" id="tab-beranda" aria-current="page"
+                    class="nav-btn group relative cursor-pointer flex-1 sm:flex-none min-w-0 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 sm:px-4 pt-2.5 pb-2 sm:py-3 min-h-[3.5rem] sm:min-h-0 text-[11px] max-[359px]:text-[10px] max-[359px]:tracking-tight sm:text-sm border-b-2 transition-colors font-bold text-garuda-700 border-garuda-700">
+                    <i class="fa-solid fa-house text-base sm:text-sm" aria-hidden="true"></i>
+                    <span class="truncate max-w-full">Beranda</span>
                 </button>
-                <button type="button" onclick="switchTab('daftar')" id="tab-daftar" class="nav-btn cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium border-b-2 border-transparent text-red-200 hover:text-white transition whitespace-nowrap">
-                    <i class="fa-brands fa-whatsapp text-emerald-400 text-base"></i>
-                    <span>Daftar WA</span>
+                <button type="button" onclick="switchTab('daftar')" id="tab-daftar"
+                    class="nav-btn group relative cursor-pointer flex-1 sm:flex-none min-w-0 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 sm:px-4 pt-2.5 pb-2 sm:py-3 min-h-[3.5rem] sm:min-h-0 text-[11px] max-[359px]:text-[10px] max-[359px]:tracking-tight sm:text-sm border-b-2 transition-colors font-semibold text-slate-500 border-transparent hover:text-garuda-700">
+                    <i class="fa-brands fa-whatsapp text-base sm:text-sm text-emerald-600" aria-hidden="true"></i>
+                    <span class="truncate max-w-full">Daftar WA</span>
                 </button>
-                <button type="button" onclick="switchTab('bilik')" id="tab-bilik" class="nav-btn cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium border-b-2 border-transparent text-red-200 hover:text-white transition whitespace-nowrap">
-                    <i class="fa-solid fa-box-archive"></i>
-                    <span>Bilik Suara</span>
+                <button type="button" onclick="switchTab('bilik')" id="tab-bilik"
+                    class="nav-btn group relative cursor-pointer flex-1 sm:flex-none min-w-0 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 sm:px-4 pt-2.5 pb-2 sm:py-3 min-h-[3.5rem] sm:min-h-0 text-[11px] max-[359px]:text-[10px] max-[359px]:tracking-tight sm:text-sm border-b-2 transition-colors font-semibold text-slate-500 border-transparent hover:text-garuda-700">
+                    <i class="fa-solid fa-box-archive text-base sm:text-sm" aria-hidden="true"></i>
+                    <span class="truncate max-w-full">Bilik Suara</span>
                 </button>
-                <button type="button" onclick="switchTab('hasil')" id="tab-hasil" class="nav-btn cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium border-b-2 border-transparent text-red-200 hover:text-white transition whitespace-nowrap">
-                    <i class="fa-solid fa-chart-column"></i>
-                    <span>Hasil</span>
+                <button type="button" onclick="switchTab('hasil')" id="tab-hasil"
+                    class="nav-btn group relative cursor-pointer flex-1 sm:flex-none min-w-0 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 sm:px-4 pt-2.5 pb-2 sm:py-3 min-h-[3.5rem] sm:min-h-0 text-[11px] max-[359px]:text-[10px] max-[359px]:tracking-tight sm:text-sm border-b-2 transition-colors font-semibold text-slate-500 border-transparent hover:text-garuda-700">
+                    <i class="fa-solid fa-chart-column text-base sm:text-sm" aria-hidden="true"></i>
+                    <span class="truncate max-w-full">Hasil</span>
                 </button>
-                <button type="button" onclick="switchTab('admin')" id="tab-admin" class="nav-btn cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium border-b-2 border-transparent text-red-200 hover:text-white transition whitespace-nowrap">
-                    <i class="fa-solid fa-user-gear"></i>
-                    <span>Panitia</span>
+                <button type="button" onclick="switchTab('admin')" id="tab-admin"
+                    class="nav-btn group relative cursor-pointer flex-1 sm:flex-none min-w-0 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 sm:px-4 pt-2.5 pb-2 sm:py-3 min-h-[3.5rem] sm:min-h-0 text-[11px] max-[359px]:text-[10px] max-[359px]:tracking-tight sm:text-sm border-b-2 transition-colors font-semibold text-slate-500 border-transparent hover:text-garuda-700">
+                    <i class="fa-solid fa-user-gear text-base sm:text-sm" aria-hidden="true"></i>
+                    <span class="truncate max-w-full">Panitia</span>
                 </button>
             </div>
         </nav>
@@ -957,7 +965,7 @@
                         start_url: window.location.href,
                         display: 'standalone',
                         background_color: '#f8fafc',
-                        theme_color: '#b91c1c',
+                        theme_color: '#ffffff',
                         icons: [
                             { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' },
                             { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any' }
@@ -1213,8 +1221,9 @@
 
                 var navBtns = document.querySelectorAll('.nav-btn');
                 for (var j = 0; j < navBtns.length; j++) {
-                    navBtns[j].classList.remove('border-white', 'text-white', 'font-bold');
-                    navBtns[j].classList.add('border-transparent', 'text-red-200', 'font-medium');
+                    navBtns[j].classList.remove('font-bold', 'text-garuda-700', 'border-garuda-700');
+                    navBtns[j].classList.add('font-semibold', 'text-slate-500', 'border-transparent', 'hover:text-garuda-700');
+                    navBtns[j].removeAttribute('aria-current');
                 }
 
                 var targetSection = document.getElementById('view-' + tabName);
@@ -1224,8 +1233,9 @@
 
                 var activeBtn = document.getElementById('tab-' + tabName);
                 if (activeBtn) {
-                    activeBtn.classList.remove('border-transparent', 'text-red-200', 'font-medium');
-                    activeBtn.classList.add('border-white', 'text-white', 'font-bold');
+                    activeBtn.classList.remove('font-semibold', 'text-slate-500', 'border-transparent', 'hover:text-garuda-700');
+                    activeBtn.classList.add('font-bold', 'text-garuda-700', 'border-garuda-700');
+                    activeBtn.setAttribute('aria-current', 'page');
                 }
 
                 updateAllUI();
