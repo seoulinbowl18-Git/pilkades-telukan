@@ -43,6 +43,15 @@ Mode dipilih otomatis berdasarkan `/api/health`. Fitur simulasi (1-klik coblos, 
 - **Moderasi:** Panel Panitia → *Moderasi Pesan Warga* → **Hapus** (`DELETE /api/messages?id=…` dengan header `x-admin-pin`). Pesan disembunyikan dari publik (`deleted_at` diisi), bukan dihapus permanen.
 - **Mode Demo Lokal:** pesan disimpan di `localStorage` dengan aturan yang sama.
 
+## Footer
+
+Footer terdiri dari tiga bagian: identitas P2KD beserta disclaimer survei hiburan, banner merah bergelombang, dan strip marun.
+- **Banner:** foto Kantor Kepala Desa Telukan, ilustrasi kotak suara (SVG), judul pemilihan, slogan, dan 3 ikon nilai (Transparan, Aman, Bersama Membangun Desa).
+- **Strip marun:** lokasi, tautan website, dan slogan desa.
+- **Ikon:** Lucide disematkan sebagai SVG inline, tanpa library tambahan.
+- **Gaya:** gaya khusus footer ada di blok `<style>` dengan prefix `.sf-`.
+- **Foto:** untuk mengganti foto kiri dengan foto gapura, ubah `src` gambar di footer (lihat komentar di `index.html`), misalnya ke `/assets/footer-gapura-telukan.jpg`.
+
 ## Batas Waktu TPS Digital
 
 - Hitung mundur di Beranda menuju **9 Desember 2026 pukul 23:59:59 WIB** (`2026-12-09T23:59:59+07:00`), sehari sebelum Pilkades 10 Desember 2026. Tampilannya HARI / JAM / MENIT / DETIK.
@@ -54,7 +63,7 @@ Mode dipilih otomatis berdasarkan `/api/health`. Fitur simulasi (1-klik coblos, 
 ```
 .
 ├── index.html            # Seluruh frontend (HTML + Tailwind CDN + JS), PWA
-├── assets/               # logo-sukoharjo*.png (ikon), hero-kantor-telukan.jpg (latar banner hero, ±1600x700 px)
+├── assets/               # logo-sukoharjo*.png (ikon), hero-kantor-telukan.jpg (latar banner hero & foto footer)
 ├── api/                  # Vercel Serverless Functions (Node.js)
 │   ├── health.js         # GET  /api/health     → status konfigurasi & koneksi
 │   ├── send-otp.js       # POST /api/send-otp   → simpan pemilih + kirim OTP via Fonnte

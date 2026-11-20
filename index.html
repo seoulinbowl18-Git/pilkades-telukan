@@ -31,6 +31,37 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font skrip untuk slogan footer -->
+    <link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&display=swap" rel="stylesheet">
+
+    <!-- Gaya khusus Footer (prefix .sf- agar tidak memengaruhi komponen lain) -->
+    <style>
+        .sf-banner { background: linear-gradient(120deg, #D00000 0%, #b80000 45%, #870000 100%); }
+        .sf-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 30l8 8 16-18'/%3E%3Cpath d='M80 92l6 6 12-14'/%3E%3C/g%3E%3Cg fill='%23ffffff'%3E%3Cpath d='M90 18l3 7 7 .6-5.4 4.6 1.7 7-6.3-3.8-6.3 3.8 1.7-7L80 25.6l7-.6z'/%3E%3Cpath d='M26 82l2.2 5 5.3.4-4 3.5 1.2 5.2-4.7-2.8-4.7 2.8 1.2-5.2-4-3.5 5.3-.4z'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: 120px 120px;
+            opacity: 0.07;
+        }
+        .sf-photo-mask {
+            -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+            mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+        }
+        @media (min-width: 1280px) {
+            .sf-photo-mask {
+                -webkit-mask-image: linear-gradient(to right, #000 55%, transparent 100%);
+                mask-image: linear-gradient(to right, #000 55%, transparent 100%);
+            }
+        }
+        .sf-script { font-family: 'Kaushan Script', 'Brush Script MT', 'Segoe Script', cursive; }
+        .sf-value-icon { transition: transform .25s ease, background-color .25s ease, box-shadow .25s ease; }
+        .sf-value:hover .sf-value-icon { transform: translateY(-3px); background-color: rgba(255,255,255,.2); box-shadow: 0 8px 20px rgba(0,0,0,.25); }
+        .sf-ballot { transition: transform .35s ease; }
+        .sf-ballot:hover { transform: translateY(-3px) rotate(-2deg); }
+        @media (prefers-reduced-motion: reduce) {
+            .sf-value-icon, .sf-ballot { transition: none; }
+            .sf-value:hover .sf-value-icon, .sf-ballot:hover { transform: none; }
+        }
+    </style>
 
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -911,16 +942,144 @@
     <!-- ========================================================= -->
     <!-- FOOTER                                                    -->
     <!-- ========================================================= -->
-    <footer class="bg-white border-t border-slate-200 py-6 px-4 text-center text-xs text-slate-500 mt-auto">
-        <div class="max-w-3xl mx-auto space-y-3">
-            <div class="bg-amber-50 border border-amber-200/90 text-amber-950 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold shadow-sm leading-relaxed">
-                <i class="fa-solid fa-face-smile-wink text-amber-600 mr-1.5"></i>
-                "Untuk semua warga Kelurahan Telukan, app web ini hanya Survey untuk Hiburan saja, Ayo gass ikuti Polling Online. Dibawa santai aja Boss !!!"
+    <footer class="site-footer mt-auto">
+        <!-- A. Identitas & informasi -->
+        <div class="bg-slate-50 px-4 pt-8 pb-6 text-center">
+            <div class="max-w-3xl mx-auto space-y-4">
+                <div class="bg-amber-50 border border-amber-200/90 text-amber-950 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold shadow-sm leading-relaxed">
+                    <i class="fa-solid fa-face-smile-wink text-amber-600 mr-1.5"></i>
+                    "Untuk semua warga Kelurahan Telukan, app web ini hanya Survey untuk Hiburan saja, Ayo gass ikuti Polling Online. Dibawa santai aja Boss !!!"
+                </div>
+                <div class="space-y-1">
+                    <p class="font-extrabold text-sm sm:text-base text-slate-800">Panitia Pemilihan Kepala Desa (P2KD) Kelurahan Telukan, Grogol</p>
+                    <p class="text-xs sm:text-sm font-bold text-garuda-700">Periode 2026–2034</p>
+                    <p class="text-[11px] sm:text-xs text-slate-500">Sistem E-Voting Terintegrasi WhatsApp • Transparan • Aman &amp; Rahasia</p>
+                </div>
             </div>
-            <div>
-                <p class="font-bold text-slate-700">Panitia Pemilihan Kepala Desa (P2KD) Kelurahan Telukan, Grogol • Periode 2026–2034</p>
-                <p class="mt-0.5">Sistem E-Voting PWA Terintegrasi WhatsApp • Transparan, Aman &amp; Rahasia</p>
+        </div>
+
+        <!-- B. Banner footer utama -->
+        <div class="sf-banner relative isolate overflow-hidden text-white">
+            <!-- Gelombang atas (merah-putih) -->
+            <svg class="absolute top-0 left-0 w-full h-16 sm:h-20 lg:h-24 z-20 pointer-events-none" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+                <path fill="#ff2a2a" d="M0 0H1440V70 C1110 126 820 34 540 74 S120 108 0 56 Z"/>
+                <path fill="#ffffff" d="M0 0H1440V56 C1110 112 820 20 540 60 S120 94 0 42 Z"/>
+                <path fill="#f8fafc" d="M0 0H1440V40 C1110 96 820 4 540 44 S120 78 0 26 Z"/>
+            </svg>
+            <!-- Pola abstrak demokrasi (opacity rendah) -->
+            <div class="sf-pattern absolute inset-0 -z-10 pointer-events-none" aria-hidden="true"></div>
+            <div class="absolute -right-24 top-10 w-80 h-80 rounded-full bg-[#ff4d4d]/20 blur-3xl -z-10 pointer-events-none" aria-hidden="true"></div>
+
+            <!-- Foto identitas Desa Telukan (aset lokal). Ganti src jika tersedia foto gapura,
+                 mis. /assets/footer-gapura-telukan.jpg -->
+            <div class="relative xl:absolute xl:inset-y-0 xl:left-0 xl:w-[24%] h-52 sm:h-64 lg:h-72 xl:h-auto">
+                <img src="/assets/hero-kantor-telukan.jpg" alt="Kantor Kepala Desa Telukan, Grogol" loading="lazy" decoding="async"
+                    class="sf-photo-mask w-full h-full object-cover object-[30%_60%]">
+                <span class="absolute left-4 bottom-6 xl:bottom-24 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/45 backdrop-blur-sm text-[10px] sm:text-[11px] font-bold tracking-wide border border-white/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+                    Kantor Kepala Desa Telukan
+                </span>
             </div>
+
+            <div class="relative z-10 mx-auto max-w-5xl xl:max-w-none px-5 xl:pl-[25%] xl:pr-14 2xl:pr-16 pt-6 sm:pt-8 xl:pt-28 pb-20 sm:pb-24 xl:pb-28">
+                <div class="flex flex-col md:flex-row md:flex-wrap xl:flex-nowrap items-center justify-center gap-8 md:gap-x-10 xl:gap-4 2xl:gap-10">
+                    <span class="hidden xl:block w-px shrink-0 self-stretch bg-white/35" aria-hidden="true"></span>
+
+                    <!-- Kotak suara + judul -->
+                    <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 xl:gap-4 2xl:gap-5 text-center sm:text-left shrink-0">
+                        <svg class="sf-ballot w-24 h-24 sm:w-28 sm:h-28 xl:w-20 xl:h-20 2xl:w-28 2xl:h-28 shrink-0 drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]" viewBox="0 0 120 120" role="img" aria-label="Ilustrasi kotak suara">
+                            <g transform="rotate(-10 61 26)">
+                                <rect x="44" y="4" width="34" height="44" rx="3" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+                                <path d="M52 25l6 6 12-13" fill="none" stroke="#D00000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </g>
+                            <path d="M16 46 60 33l44 13-44 13z" fill="#f8fafc"/>
+                            <path d="M45 45.5 60 41l15 4.5L60 50z" fill="#334155"/>
+                            <path d="M16 46 60 59v54L16 99z" fill="#e2e8f0"/>
+                            <path d="M60 59l44-13v53l-44 14z" fill="#cbd5e1"/>
+                            <path d="M16 62l44 13v14L16 76z" fill="#D00000"/>
+                            <path d="M60 75l44-13v14L60 89z" fill="#a30000"/>
+                            <circle cx="82" cy="85" r="8.5" fill="#ffffff"/>
+                            <path d="M78 85l3 3 6-7" fill="none" stroke="#D00000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <div class="min-w-0">
+                            <h2 class="font-extrabold uppercase leading-[1.05] tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.3)]">
+                                <span class="block whitespace-nowrap text-xl sm:text-2xl xl:text-[22px] 2xl:text-[28px]">Pemilihan Kepala Desa</span>
+                                <span class="block whitespace-nowrap text-[26px] sm:text-3xl xl:text-[28px] 2xl:text-[36px] text-[#FFD43B]">Telukan, Grogol</span>
+                            </h2>
+                            <div class="mt-3 flex items-center justify-center sm:justify-start gap-2">
+                                <span class="h-0.5 w-5 bg-white/80 rounded" aria-hidden="true"></span>
+                                <span class="inline-flex items-center px-4 py-1 rounded-full bg-white text-[#b00000] text-xs sm:text-sm font-extrabold border-2 border-[#FFD43B]/70 shadow-md whitespace-nowrap">Periode 2026 – 2034</span>
+                                <span class="h-0.5 w-5 bg-white/80 rounded" aria-hidden="true"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slogan -->
+                    <div class="text-center xl:text-left xl:flex-1 min-w-0 xl:min-w-[190px]">
+                        <p class="sf-script text-[26px] sm:text-[30px] xl:text-[22px] 2xl:text-[32px] leading-tight xl:whitespace-nowrap -rotate-3 drop-shadow-[0_2px_6px_rgba(0,0,0,0.3)]">
+                            Suara Anda,<br>Masa Depan Desa Kita
+                        </p>
+                        <svg class="mx-auto xl:mx-0 mt-1 w-52 sm:w-60 xl:w-48 2xl:w-60 h-4" viewBox="0 0 240 16" preserveAspectRatio="none" aria-hidden="true">
+                            <path d="M4 12 C70 2 160 2 236 9" fill="none" stroke="#FFD43B" stroke-width="3" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+
+                    <span class="hidden xl:block w-px shrink-0 self-stretch bg-white/35" aria-hidden="true"></span>
+
+                    <!-- Tiga nilai utama -->
+                    <div class="grid grid-cols-3 gap-4 sm:gap-8 xl:gap-2 2xl:gap-7 w-full max-w-sm sm:max-w-md md:basis-full xl:basis-auto xl:w-auto xl:max-w-none shrink-0 mx-auto">
+                            <div class="sf-value flex flex-col items-center text-center gap-2 min-w-0">
+                                <div class="sf-value-icon w-14 h-14 xl:w-12 xl:h-12 2xl:w-16 2xl:h-16 rounded-full border-2 border-white/85 bg-white/10 flex items-center justify-center shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 xl:w-6 xl:h-6 2xl:w-8 2xl:h-8 text-white" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                                </div>
+                                <div class="leading-tight">
+                                    <span class="block text-[13px] 2xl:text-sm font-extrabold tracking-wide">Transparan</span>
+                                </div>
+                            </div>
+                            <div class="sf-value flex flex-col items-center text-center gap-2 min-w-0">
+                                <div class="sf-value-icon w-14 h-14 xl:w-12 xl:h-12 2xl:w-16 2xl:h-16 rounded-full border-2 border-white/85 bg-white/10 flex items-center justify-center shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 xl:w-6 xl:h-6 2xl:w-8 2xl:h-8 text-white" aria-hidden="true"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>
+                                </div>
+                                <div class="leading-tight">
+                                    <span class="block text-[13px] 2xl:text-sm font-extrabold tracking-wide">Aman</span>
+                                </div>
+                            </div>
+                            <div class="sf-value flex flex-col items-center text-center gap-2 min-w-0">
+                                <div class="sf-value-icon w-14 h-14 xl:w-12 xl:h-12 2xl:w-16 2xl:h-16 rounded-full border-2 border-white/85 bg-white/10 flex items-center justify-center shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 xl:w-6 xl:h-6 2xl:w-8 2xl:h-8 text-white" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                </div>
+                                <div class="leading-tight">
+                                    <span class="block text-[13px] 2xl:text-sm font-extrabold tracking-wide">Bersama</span>
+                                    <span class="block text-[10px] 2xl:text-[11px] font-semibold text-white/85">Membangun Desa</span>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gelombang bawah (putih & marun) -->
+            <svg class="absolute bottom-0 left-0 w-full h-14 sm:h-16 lg:h-20 z-20 pointer-events-none" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+                <path fill="#ffffff" fill-opacity="0.9" d="M0 120V52 C300 -8 640 82 900 42 S1260 0 1440 34 V120 Z"/>
+                <path fill="#5f0000" d="M0 120V70 C300 10 640 100 900 60 S1260 18 1440 52 V120 Z"/>
+            </svg>
+        </div>
+
+        <!-- 3. Strip informasi bawah -->
+        <div class="bg-[#5f0000] text-white">
+            <div class="max-w-6xl mx-auto px-3 sm:px-5 pt-3 pb-4 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/25 text-center">
+                <div class="flex items-center justify-center gap-2 py-3 sm:py-1 px-3 min-w-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 shrink-0" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span class="text-sm sm:text-[13px] lg:text-sm font-semibold">Kelurahan Telukan, Grogol</span>
+                </div>
+                <a href="/" class="group flex items-center justify-center gap-2 py-3 sm:py-1 px-3 min-w-0 hover:text-[#FFD43B] transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                    <span class="text-sm sm:text-[13px] lg:text-sm font-semibold">Website resmi E-Pilkades Telukan</span>
+                </a>
+                <div class="flex items-center justify-center py-3 sm:py-1 px-3 min-w-0">
+                    <span class="sf-script text-lg sm:text-base md:text-lg lg:text-xl whitespace-nowrap">"Desa Maju, Warga Sejahtera"</span>
+                </div>
+            </div>
+            <p class="pb-4 px-4 text-center text-[10px] text-white/55">© 2026 P2KD Kelurahan Telukan, Grogol • Polling hiburan warga, bukan pemilihan resmi.</p>
         </div>
     </footer>
 
