@@ -26,6 +26,13 @@ Mode dipilih otomatis berdasarkan `/api/health`. Fitur simulasi (1-klik coblos, 
 
 ---
 
+## Profil Kandidat (MongoDB)
+
+- Profil 3 kandidat (01 **Sriyanto**, 02 **Hesti Kartika Asmara**, 03 **Hj Trihadi Hari**) disimpan di koleksi `kandidat`. Saat pertama dipakai, koleksi ini diisi otomatis dari `KANDIDAT_DEFAULTS` di `lib/config.js`, tanpa pernah menimpa hasil edit panitia.
+- **Mode Online:** perubahan di Panel Panitia → *Pengaturan Foto & Profil 3 Kandidat* (nama, slogan, visi, URL/upload foto, reset foto) disimpan lewat `PUT /api/candidates` (header `x-admin-pin`) dan langsung berlaku untuk semua pengunjung. Halaman mengambil profil terbaru saat dibuka, saat pindah tab, dan tiap 30 detik.
+- Foto upload dikompres di browser (maks 320 px, JPEG). Server hanya menerima JPG/PNG/WEBP ≤ 200 KB, atau URL `https://…` / path `/…`.
+- **Mode Demo Lokal:** profil tetap disimpan di `localStorage` perangkat masing-masing.
+
 ## Pesan & Harapan Warga
 
 - Setelah mencoblos, panel tanda bukti menampilkan form **"Pesan & Harapan untuk Pilkades Telukan"** (3–240 karakter). Papan pesan ada di tab **Hasil** (50 terbaru) dan versi ringkas di panel tanda bukti. Papan diperbarui otomatis tiap ±12 detik saat halaman terlihat.
@@ -54,12 +61,14 @@ Mode dipilih otomatis berdasarkan `/api/health`. Fitur simulasi (1-klik coblos, 
 │   ├── verify-otp.js     # POST /api/verify-otp → cek OTP, set is_verified, beri session token
 │   ├── vote.js           # POST /api/vote       → rekam 1 suara per nomor WA
 │   ├── results.js        # GET  /api/results    → rekap suara (+ daftar pemilih untuk panitia)
-│   └── messages.js       # GET/POST/DELETE /api/messages → pesan & harapan warga
+│   ├── messages.js       # GET/POST/DELETE /api/messages → pesan & harapan warga
+│   └── candidates.js     # GET/PUT /api/candidates → profil 3 kandidat (edit oleh panitia)
 ├── lib/
 │   ├── mongodb.js        # Koneksi MongoDB ber-cache global (aman untuk serverless) + index koleksi
 │   ├── fonnte.js         # Kirim pesan WhatsApp via https://api.fonnte.com/send
 │   ├── http.js           # Helper JSON response, validasi, normalisasi nomor WA (62...)
 │   ├── messages.js       # Pembersihan teks pesan, penyamaran nama
+│   ├── candidates.js     # Validasi profil & foto kandidat
 │   └── config.js         # Konstanta: ID kandidat, masa berlaku OTP, batas percobaan, dll.
 ├── package.json          # Dependency: mongodb
 ├── .env.example          # Contoh environment variables
@@ -73,6 +82,7 @@ Mode dipilih otomatis berdasarkan `/api/health`. Fitur simulasi (1-klik coblos, 
 | `pemilih` | `nama_lengkap`, `no_wa` (format `62...`), `rt_rw`, `is_verified`, `verified_at`, `has_voted`, `voted_at`, `created_at` | `no_wa` **unik** |
 | `otp_verifications` | `no_wa`, `otp_hash`, `expires_at`, `consumed_at`, `attempt_count`, `created_at` | `no_wa + created_at`, TTL `expires_at` (dihapus otomatis 1 hari setelah kedaluwarsa) |
 | `suara` | `no_wa`, `kandidat_id` (1/2/3), `receipt_id`, `message_token_hash`, `created_at` | `no_wa` **unik**, `kandidat_id`, `receipt_id` unik |
+| `kandidat` | `kandidat_id` (1/2/3), `nomor`, `name`, `tagline`, `visi`, `misi[]`, `photo` (URL atau JPEG terkompresi ≤ 200 KB), `updated_at` | `kandidat_id` **unik** |
 | `pesan_warga` | `message_id`, `receipt_id`, `no_wa` (internal), `nama_tampil`, `pesan`, `created_at`, `deleted_at` | `message_id` unik, `deleted_at + created_at`, `receipt_id + created_at` |
 
 ---

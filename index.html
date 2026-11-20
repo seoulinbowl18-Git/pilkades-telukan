@@ -730,7 +730,7 @@
                 <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6 space-y-4">
                     <div>
                         <h3 class="font-bold text-lg text-slate-900">Pengaturan Foto &amp; Profil 3 Kandidat</h3>
-                        <p class="text-xs text-slate-500">Upload foto asli kandidat (otomatis dikompresi agar hemat penyimpanan), masukkan URL/path folder (misal <code class="bg-slate-100 px-1.5 py-0.5 rounded">/images/kandidat-1.jpg</code>), atau ubah profilnya.</p>
+                        <p class="text-xs text-slate-500">Upload foto asli kandidat (otomatis dikompresi agar hemat penyimpanan), masukkan URL/path folder (misal <code class="bg-slate-100 px-1.5 py-0.5 rounded">/images/kandidat-1.jpg</code>), atau ubah profilnya. Di Mode Online perubahan disimpan ke database dan langsung berlaku untuk semua pengunjung.</p>
                     </div>
                     <div id="admin-candidates-editor" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
                 </div>
@@ -932,6 +932,10 @@
             var onlineMessages = [];
             var messagesRefreshInFlight = null;
             var messageSendInFlight = false;
+
+            // Profil kandidat (Mode Online: koleksi `kandidat` di MongoDB via /api/candidates)
+            var candidatesRefreshInFlight = null;
+            var candidateSaveInFlight = false;
             var originalOtpBoxText = null;
 
             /* ---------------------------------------------------------
@@ -1242,6 +1246,7 @@
                 if (tabName === 'hasil' || tabName === 'admin' || tabName === 'bilik') {
                     refreshMessages(false);
                 }
+                if (isOnline()) refreshCandidates();
                 try {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 } catch (e) {
@@ -1444,6 +1449,8 @@
                     onlineAdminPin = null;
                     onlineMessages = [];
                     if (resendTimer) { clearInterval(resendTimer); resendTimer = null; }
+                    // Kembali ke Mode Demo: pulihkan profil kandidat lokal (bukan dari server)
+                    if (mode === 'demo') loadState();
                     var otpBox = document.getElementById('otp-verification-box');
                     if (otpBox) otpBox.classList.add('hidden');
                     logoutBilik();
@@ -1460,6 +1467,7 @@
                     updateAllUI();
                     refreshOnlineData(false);
                     refreshMessages(false);
+                    refreshCandidates();
                 } else {
                     updateAllUI();
                 }
@@ -2688,6 +2696,91 @@
             }
 
             // Kompres gambar via HTML5 Canvas agar ringan disimpan di localStorage
+            /**
+             * Terapkan profil kandidat dari server ke state tampilan (Mode Online).
+             * Tidak disimpan ke localStorage supaya data Mode Demo tetap terpisah.
+             */
+            function applyServerCandidates(list) {
+                if (!Array.isArray(list)) return;
+                for (var i = 0; i < list.length; i++) {
+                    var srv = list[i];
+                    var cand = appState.candidates.find(function (c) { return c.id === srv.kandidat_id; });
+                    if (!cand) continue;
+                    if (srv.name) cand.name = srv.name;
+                    if (srv.tagline) cand.tagline = srv.tagline;
+                    if (srv.visi) cand.visi = srv.visi;
+                    if (Array.isArray(srv.misi) && srv.misi.length) cand.misi = srv.misi.slice();
+                    cand.photo = srv.photo || getDefaultAvatarDataUrl(cand.number);
+                }
+                updateAllUI();
+                var ballot = document.getElementById('bilik-ballot-panel');
+                if (ballot && !ballot.classList.contains('hidden')) renderCandidates();
+            }
+
+            function refreshCandidates() {
+                if (!isOnline()) return Promise.resolve(null);
+                if (candidatesRefreshInFlight) return candidatesRefreshInFlight;
+                candidatesRefreshInFlight = apiRequest('/api/candidates').then(function (data) {
+                    if (isOnline()) applyServerCandidates(data.candidates);
+                    return data;
+                }, function () {
+                    return null;
+                }).then(function (r) {
+                    candidatesRefreshInFlight = null;
+                    return r;
+                });
+                return candidatesRefreshInFlight;
+            }
+
+            function clearCandidateEditorDirty(idx) {
+                var card = document.getElementById('edit-cand-card-' + idx);
+                if (!card) return;
+                var fields = card.querySelectorAll('[data-dirty]');
+                for (var i = 0; i < fields.length; i++) fields[i].removeAttribute('data-dirty');
+            }
+
+            /**
+             * Simpan perubahan profil kandidat.
+             * Mode Online → PUT /api/candidates (MongoDB, berlaku untuk semua pengunjung).
+             * Mode Demo   → appState + localStorage (hanya di perangkat ini).
+             */
+            function persistCandidate(idx, changes, successMessage) {
+                var cand = appState.candidates[idx];
+                if (!cand) return;
+
+                if (!isOnline()) {
+                    if (changes.name !== undefined) cand.name = changes.name;
+                    if (changes.tagline !== undefined) cand.tagline = changes.tagline;
+                    if (changes.visi !== undefined) cand.visi = changes.visi;
+                    if (changes.photo !== undefined) cand.photo = changes.photo || getDefaultAvatarDataUrl(cand.number);
+                    clearCandidateEditorDirty(idx);
+                    saveState();
+                    showToast(successMessage, 'success');
+                    return;
+                }
+
+                if (!isAdminAuthenticated || !onlineAdminPin) {
+                    showToast('Sesi Panel Panitia berakhir. Silakan masuk ulang dengan PIN.', 'error');
+                    return;
+                }
+                if (candidateSaveInFlight) return;
+                candidateSaveInFlight = true;
+                apiRequest('/api/candidates', {
+                    method: 'PUT',
+                    headers: { 'x-admin-pin': onlineAdminPin },
+                    body: Object.assign({ kandidat_id: cand.id }, changes)
+                }).then(function (resp) {
+                    clearCandidateEditorDirty(idx);
+                    applyServerCandidates([resp.candidate]);
+                    showToast(successMessage + ' (tersimpan di database, berlaku untuk semua pengunjung)', 'success');
+                }, function (err) {
+                    showToast('Gagal menyimpan profil kandidat: ' + err.message, 'error');
+                }).then(function () {
+                    candidateSaveInFlight = false;
+                });
+            }
+
+            // Kompres gambar via HTML5 Canvas (maks 320 px, JPEG) agar ringan disimpan
             function adminHandlePhotoUpload(event, idx) {
                 var file = event.target && event.target.files ? event.target.files[0] : null;
                 if (!file) return;
@@ -2701,6 +2794,7 @@
                 reader.onload = function (e) {
                     var img = new Image();
                     img.onload = function () {
+                        var dataUrl;
                         try {
                             var maxDim = 320;
                             var width = img.width;
@@ -2712,26 +2806,17 @@
                                 width = Math.round((width * maxDim) / height);
                                 height = maxDim;
                             }
-
                             var canvas = document.createElement('canvas');
                             canvas.width = width;
                             canvas.height = height;
-                            var ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, width, height);
-
-                            var compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
-                            appState.candidates[idx].photo = compressedDataUrl;
-
-                            var urlInput = document.getElementById('edit-cand-photo-' + idx);
-                            if (urlInput) urlInput.value = '';
-
-                            saveState();
-                            showToast('Foto kandidat No. ' + appState.candidates[idx].number + ' berhasil diperbarui!', 'success');
+                            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                            dataUrl = canvas.toDataURL('image/jpeg', 0.82);
                         } catch (err) {
-                            appState.candidates[idx].photo = e.target.result;
-                            saveState();
-                            showToast('Foto kandidat berhasil dimuat!', 'success');
+                            dataUrl = e.target.result;
                         }
+                        var urlInput = document.getElementById('edit-cand-photo-' + idx);
+                        if (urlInput) urlInput.value = '';
+                        persistCandidate(idx, { photo: dataUrl }, 'Foto kandidat No. ' + appState.candidates[idx].number + ' berhasil diperbarui!');
                     };
                     img.onerror = function () {
                         showToast('Gagal memproses file gambar.', 'error');
@@ -2757,23 +2842,17 @@
                     return;
                 }
 
-                appState.candidates[idx].name = newName;
-                if (newTag) appState.candidates[idx].tagline = newTag;
-                if (newVisi) appState.candidates[idx].visi = newVisi;
-                if (newPhoto) {
-                    appState.candidates[idx].photo = newPhoto;
-                }
-
-                saveState();
-                showToast('Profil Kandidat No. ' + appState.candidates[idx].number + ' disimpan!', 'success');
+                var changes = { name: newName };
+                if (newTag) changes.tagline = newTag;
+                if (newVisi) changes.visi = newVisi;
+                if (newPhoto) changes.photo = newPhoto;
+                persistCandidate(idx, changes, 'Profil Kandidat No. ' + appState.candidates[idx].number + ' disimpan!');
             }
 
             function adminResetPhoto(idx) {
                 var cand = appState.candidates[idx];
                 if (!cand) return;
-                cand.photo = getDefaultAvatarDataUrl(cand.number);
-                saveState();
-                showToast('Foto Kandidat No. ' + cand.number + ' dikembalikan ke avatar bawaan.', 'info');
+                persistCandidate(idx, { photo: '' }, 'Foto Kandidat No. ' + cand.number + ' dikembalikan ke avatar bawaan.');
             }
 
             function renderAdminPanel() {
@@ -2852,6 +2931,8 @@
 
                 var editorGrid = document.getElementById('admin-candidates-editor');
                 if (!editorGrid) return;
+                // Jangan menimpa isian yang sedang diketik / belum disimpan (mis. saat auto-refresh)
+                if (editorGrid.contains(document.activeElement) || editorGrid.querySelector('[data-dirty]')) return;
 
                 renderAdminMessages();
 
@@ -2862,7 +2943,7 @@
                     var isDefaultPhoto = !c.photo || c.photo.indexOf('data:image/svg+xml') === 0 || c.photo.indexOf('data:image/jpeg') === 0;
                     var urlInputVal = isDefaultPhoto ? '' : c.photo;
 
-                    cardsHtml += '<div class="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-3 flex flex-col justify-between">' +
+                    cardsHtml += '<div id="edit-cand-card-' + k + '" class="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-3 flex flex-col justify-between">' +
                         '<div class="space-y-3">' +
                             '<div class="flex items-center justify-between">' +
                                 '<span class="font-extrabold text-sm text-garuda-700">Kandidat No. ' + escapeHtml(c.number) + '</span>' +
@@ -2878,19 +2959,19 @@
                             '</div>' +
                             '<div>' +
                                 '<label class="block text-[11px] font-bold text-slate-600 mb-1">URL / Path Foto (opsional)</label>' +
-                                '<input type="text" id="edit-cand-photo-' + k + '" value="' + escapeHtml(urlInputVal) + '" placeholder="/images/kandidat-' + c.id + '.jpg" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">' +
+                                '<input type="text" id="edit-cand-photo-' + k + '" oninput="this.setAttribute(\'data-dirty\', \'1\')" value="' + escapeHtml(urlInputVal) + '" placeholder="/images/kandidat-' + c.id + '.jpg" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">' +
                             '</div>' +
                             '<div>' +
                                 '<label class="block text-[11px] font-bold text-slate-600 mb-1">Nama Kandidat</label>' +
-                                '<input type="text" id="edit-cand-name-' + k + '" value="' + escapeHtml(c.name) + '" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-white">' +
+                                '<input type="text" id="edit-cand-name-' + k + '" oninput="this.setAttribute(\'data-dirty\', \'1\')" value="' + escapeHtml(c.name) + '" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-white">' +
                             '</div>' +
                             '<div>' +
                                 '<label class="block text-[11px] font-bold text-slate-600 mb-1">Slogan / Tagline</label>' +
-                                '<input type="text" id="edit-cand-tag-' + k + '" value="' + escapeHtml(c.tagline) + '" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">' +
+                                '<input type="text" id="edit-cand-tag-' + k + '" oninput="this.setAttribute(\'data-dirty\', \'1\')" value="' + escapeHtml(c.tagline) + '" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">' +
                             '</div>' +
                             '<div>' +
                                 '<label class="block text-[11px] font-bold text-slate-600 mb-1">Visi Utama</label>' +
-                                '<textarea id="edit-cand-visi-' + k + '" rows="2" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">' + escapeHtml(c.visi) + '</textarea>' +
+                                '<textarea id="edit-cand-visi-' + k + '" oninput="this.setAttribute(\'data-dirty\', \'1\')" rows="2" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">' + escapeHtml(c.visi) + '</textarea>' +
                             '</div>' +
                         '</div>' +
                         '<div class="pt-2 space-y-2">' +
@@ -3007,6 +3088,7 @@
                 setInterval(function () {
                     if (isOnline() && (!document.visibilityState || document.visibilityState === 'visible')) {
                         refreshOnlineData(false);
+                        refreshCandidates();
                     }
                 }, 30000);
             }
