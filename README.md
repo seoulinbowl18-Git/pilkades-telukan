@@ -37,6 +37,7 @@ Mode dipilih otomatis berdasarkan `/api/health`. Fitur simulasi (1-klik coblos, 
 ```
 .
 ├── index.html            # Seluruh frontend (HTML + Tailwind CDN + JS), PWA
+├── assets/               # logo-sukoharjo*.png (ikon), hero-kantor-telukan.jpg (latar banner hero, ±1600x700 px)
 ├── api/                  # Vercel Serverless Functions (Node.js)
 │   ├── health.js         # GET  /api/health     → status konfigurasi & koneksi
 │   ├── send-otp.js       # POST /api/send-otp   → simpan pemilih + kirim OTP via Fonnte

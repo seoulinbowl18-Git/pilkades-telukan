@@ -133,20 +133,31 @@
         <!-- TAB 1: BERANDA                                          -->
         <!-- ======================================================= -->
         <section id="view-beranda" class="view-section space-y-6">
-            <!-- Hero Banner -->
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-garuda-900 to-slate-900 text-white p-6 sm:p-8 shadow-xl border border-garuda-800/50">
-                <div class="absolute -right-12 -top-12 w-56 h-56 rounded-full bg-garuda-600/20 blur-2xl pointer-events-none"></div>
-                <div class="absolute -left-12 -bottom-12 w-56 h-56 rounded-full bg-amber-500/10 blur-2xl pointer-events-none"></div>
+            <!-- Hero Banner
+                 Latar foto Kantor Kepala Desa Telukan: assets/hero-kantor-telukan.jpg
+                 (disarankan ±1600x700 px, JPG < 300 KB). Jika file belum ada, banner
+                 otomatis memakai gradasi merah marun di bawahnya. -->
+            <div class="relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-garuda-900 to-slate-900 text-white p-6 sm:p-8 shadow-xl border border-garuda-800/50">
+                <!-- Lapisan 1: foto latar -->
+                <div class="absolute inset-0 -z-10 bg-cover bg-[center_40%] bg-no-repeat scale-[1.02]"
+                    style="background-image: url('/assets/hero-kantor-telukan.jpg');" aria-hidden="true"></div>
+                <!-- Lapisan 2: overlay gradasi gelap marun (kiri pekat untuk teks, kanan lebih transparan) -->
+                <div class="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950/90 via-garuda-900/75 to-garuda-900/45" aria-hidden="true"></div>
+                <!-- Lapisan 3: penggelap tambahan di HP & bagian bawah agar teks tetap kontras -->
+                <div class="absolute inset-0 -z-10 bg-gradient-to-t from-slate-950/60 via-slate-950/20 to-transparent lg:from-slate-950/40 lg:via-transparent" aria-hidden="true"></div>
+                <div class="absolute inset-0 -z-10 bg-slate-950/25 lg:bg-transparent" aria-hidden="true"></div>
+                <div class="absolute -right-12 -top-12 w-56 h-56 rounded-full bg-garuda-600/20 blur-2xl pointer-events-none -z-10"></div>
+                <div class="absolute -left-12 -bottom-12 w-56 h-56 rounded-full bg-amber-500/10 blur-2xl pointer-events-none -z-10"></div>
 
                 <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div class="space-y-3 max-w-xl">
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-amber-300 border border-white/15">
                             <i class="fa-solid fa-bullhorn"></i> Polling Online Warga • Periode 2026–2034
                         </span>
-                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight">
+                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight [text-shadow:0_2px_12px_rgba(0,0,0,0.45)]">
                             Pemilihan Kepala Desa <span class="text-red-400">Kelurahan Telukan, Grogol</span>
                         </h2>
-                        <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                        <p class="text-slate-200 text-sm sm:text-base leading-relaxed [text-shadow:0_1px_8px_rgba(0,0,0,0.5)]">
                             Suarakan pilihan terbaik Anda untuk kemajuan Kelurahan Telukan melalui sistem E-Voting terverifikasi Nomor WhatsApp.
                         </p>
                         <div class="pt-2 flex flex-wrap gap-2.5">
