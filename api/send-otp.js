@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { getDb, COLLECTIONS } = require('../lib/mongodb');
 const { sendWhatsApp, isFonnteConfigured } = require('../lib/fonnte');
 const {
-    HttpError, sendJson, allowMethods, readBody, handleError,
+    HttpError, sendJson, allowMethods, readBody, handleError, assertVotingOpen,
     hashOtp, normalizeWa, maskWa, cleanText
 } = require('../lib/http');
 const config = require('../lib/config');
@@ -22,6 +22,8 @@ module.exports = async function handler(req, res) {
     if (!allowMethods(req, res, ['POST'])) return;
 
     try {
+        assertVotingOpen();
+
         const body = readBody(req);
         const nama = cleanText(body.nama_lengkap, 80);
         const rtRw = cleanText(body.rt_rw, 120);

@@ -3,7 +3,7 @@
 const { getDb, isMongoConfigured, getDbName, inspectMongoUri, tagStage } = require('../lib/mongodb');
 const { diagnoseMongoError } = require('../lib/mongo-diagnostics');
 const { isFonnteConfigured } = require('../lib/fonnte');
-const { sendJson, allowMethods } = require('../lib/http');
+const { sendJson, allowMethods, getVotingDeadline } = require('../lib/http');
 const config = require('../lib/config');
 
 /**
@@ -27,6 +27,10 @@ module.exports = async function handler(req, res) {
         fonnte_configured: isFonnteConfigured(),
         missing_env: []
     };
+
+    const deadline = getVotingDeadline();
+    status.voting_deadline = deadline.toISOString();
+    status.voting_closed = Date.now() > deadline.getTime();
 
     if (!status.mongodb_configured) status.missing_env.push('MONGODB_URI');
     if (!status.fonnte_configured) status.missing_env.push('FONNTE_TOKEN');

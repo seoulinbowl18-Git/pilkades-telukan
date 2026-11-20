@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 const { getDb, COLLECTIONS } = require('../lib/mongodb');
 const {
-    HttpError, sendJson, allowMethods, readBody, handleError,
+    HttpError, sendJson, allowMethods, readBody, handleError, assertVotingOpen,
     sha256, hashOtp, safeEqual, normalizeWa
 } = require('../lib/http');
 const config = require('../lib/config');
@@ -18,6 +18,8 @@ module.exports = async function handler(req, res) {
     if (!allowMethods(req, res, ['POST'])) return;
 
     try {
+        assertVotingOpen();
+
         const body = readBody(req);
         const noWa = normalizeWa(body.no_wa);
         const otp = String(body.otp == null ? '' : body.otp).replace(/[^0-9]/g, '');

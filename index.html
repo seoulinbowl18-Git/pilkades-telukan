@@ -165,27 +165,31 @@
                         </div>
                     </div>
 
-                    <!-- Live Countdown Box -->
-                    <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-5 shrink-0 lg:w-72">
+                    <!-- Live Countdown Box: target 9 Desember 2026 pukul 23:59:59 WIB -->
+                    <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 sm:p-5 w-full sm:max-w-sm lg:w-80 shrink-0">
                         <p class="text-xs font-bold uppercase tracking-wider text-red-200 text-center mb-3">
                             <i class="fa-regular fa-clock mr-1"></i> Sisa Waktu Pemungutan Suara
                         </p>
-                        <div class="grid grid-cols-3 gap-2 text-center">
-                            <div class="bg-slate-950/60 rounded-xl p-2.5 border border-white/10">
-                                <span id="cd-hours" class="block text-2xl font-extrabold text-white">08</span>
-                                <span class="text-[10px] uppercase tracking-wider text-slate-400">Jam</span>
+                        <div class="grid grid-cols-4 gap-1.5 sm:gap-2 text-center" role="timer" aria-live="off" aria-label="Sisa waktu pemungutan suara">
+                            <div class="bg-slate-950/60 rounded-xl py-2.5 px-1 border border-white/10 min-w-0">
+                                <span id="cd-days" class="block text-xl sm:text-2xl font-extrabold text-amber-300 tabular-nums">00</span>
+                                <span class="block text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400">Hari</span>
                             </div>
-                            <div class="bg-slate-950/60 rounded-xl p-2.5 border border-white/10">
-                                <span id="cd-minutes" class="block text-2xl font-extrabold text-amber-400">45</span>
-                                <span class="text-[10px] uppercase tracking-wider text-slate-400">Menit</span>
+                            <div class="bg-slate-950/60 rounded-xl py-2.5 px-1 border border-white/10 min-w-0">
+                                <span id="cd-hours" class="block text-xl sm:text-2xl font-extrabold text-white tabular-nums">00</span>
+                                <span class="block text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400">Jam</span>
                             </div>
-                            <div class="bg-slate-950/60 rounded-xl p-2.5 border border-white/10">
-                                <span id="cd-seconds" class="block text-2xl font-extrabold text-emerald-400">30</span>
-                                <span class="text-[10px] uppercase tracking-wider text-slate-400">Detik</span>
+                            <div class="bg-slate-950/60 rounded-xl py-2.5 px-1 border border-white/10 min-w-0">
+                                <span id="cd-minutes" class="block text-xl sm:text-2xl font-extrabold text-amber-400 tabular-nums">00</span>
+                                <span class="block text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400">Menit</span>
+                            </div>
+                            <div class="bg-slate-950/60 rounded-xl py-2.5 px-1 border border-white/10 min-w-0">
+                                <span id="cd-seconds" class="block text-xl sm:text-2xl font-extrabold text-emerald-400 tabular-nums">00</span>
+                                <span class="block text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400">Detik</span>
                             </div>
                         </div>
-                        <p class="text-[11px] text-slate-300 text-center mt-3">
-                            TPS Digital ditutup pukul 14:00 WIB
+                        <p id="cd-note" class="text-[11px] text-slate-300 text-center mt-3">
+                            TPS Digital ditutup 9 Desember 2026 pukul 23:59 WIB
                         </p>
                     </div>
                 </div>
@@ -833,6 +837,11 @@
             var isAdminAuthenticated = false;
 
             // Mode data: 'online' (API /api/* + MongoDB + OTP WhatsApp Fonnte) atau 'demo' (localStorage)
+            // Batas waktu TPS Digital (sama dengan VOTING_DEADLINE_ISO di lib/config.js)
+            var VOTING_DEADLINE_ISO = '2026-12-09T23:59:59+07:00';
+            var VOTING_DEADLINE_MS = new Date(VOTING_DEADLINE_ISO).getTime();
+            var VOTING_CLOSED_MESSAGE = 'TPS Digital telah ditutup (9 Desember 2026). Pendaftaran & pemungutan suara tidak lagi dilayani.';
+
             var MODE_PREF_KEY = 'pilkades_telukan_mode_pref';
             var API_TIMEOUT_MS = 15000;
             var dataMode = 'demo';
@@ -1533,6 +1542,10 @@
 
             function handleRegister(event) {
                 if (event) event.preventDefault();
+                if (isVotingClosed()) {
+                    showToast(VOTING_CLOSED_MESSAGE, 'warning');
+                    return;
+                }
 
                 var name = document.getElementById('reg-name').value.trim();
                 var rawWa = document.getElementById('reg-wa').value.trim();
@@ -1828,6 +1841,10 @@
 
             // 1-Klik Simulasi Cepat: Otomatis mendaftarkan pemilih baru terverifikasi & membuka Bilik Suara
             function quickSimVote() {
+                if (isVotingClosed()) {
+                    showToast(VOTING_CLOSED_MESSAGE, 'warning');
+                    return;
+                }
                 if (isOnline()) {
                     showToast('Simulasi 1-klik hanya tersedia di Mode Demo Lokal. Di Mode Online, silakan daftar & verifikasi OTP WhatsApp.', 'info');
                     switchTab('daftar');
@@ -1854,6 +1871,10 @@
              * --------------------------------------------------------- */
             function handleVoterLogin(event) {
                 if (event) event.preventDefault();
+                if (isVotingClosed()) {
+                    showToast(VOTING_CLOSED_MESSAGE, 'warning');
+                    return;
+                }
                 var wa = normalizeWaNumber(document.getElementById('login-wa').value.trim());
                 var otp = document.getElementById('login-otp').value.trim().toUpperCase();
 
@@ -2041,6 +2062,11 @@
 
             function confirmVote() {
                 if (!currentLoggedVoter || !selectedCandidateForVote) return;
+                if (isVotingClosed()) {
+                    closeModal('modal-confirm-vote');
+                    showToast(VOTING_CLOSED_MESSAGE, 'warning');
+                    return;
+                }
 
                 if (isOnline()) {
                     confirmVoteOnline();
@@ -2517,21 +2543,46 @@
             /* ---------------------------------------------------------
              * 8. LIVE COUNTDOWN TIMER
              * --------------------------------------------------------- */
-            function startCountdown() {
-                var totalSeconds = (6 * 3600) + (42 * 60) + 19;
-                setInterval(function () {
-                    if (totalSeconds <= 0) return;
-                    totalSeconds--;
-                    var h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-                    var m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-                    var s = String(totalSeconds % 60).padStart(2, '0');
+            function isVotingClosed() {
+                return Date.now() > VOTING_DEADLINE_MS;
+            }
 
-                    var elH = document.getElementById('cd-hours');
-                    var elM = document.getElementById('cd-minutes');
-                    var elS = document.getElementById('cd-seconds');
-                    if (elH) elH.textContent = h;
-                    if (elM) elM.textContent = m;
-                    if (elS) elS.textContent = s;
+            function pad2(n) {
+                return String(n).padStart(2, '0');
+            }
+
+            function renderCountdown() {
+                var remainingMs = VOTING_DEADLINE_MS - Date.now();
+                var closed = remainingMs <= 0;
+                var total = closed ? 0 : Math.floor(remainingMs / 1000);
+
+                var parts = {
+                    'cd-days': pad2(Math.floor(total / 86400)),
+                    'cd-hours': pad2(Math.floor((total % 86400) / 3600)),
+                    'cd-minutes': pad2(Math.floor((total % 3600) / 60)),
+                    'cd-seconds': pad2(total % 60)
+                };
+                for (var id in parts) {
+                    if (Object.prototype.hasOwnProperty.call(parts, id)) {
+                        var el = document.getElementById(id);
+                        if (el && el.textContent !== parts[id]) el.textContent = parts[id];
+                    }
+                }
+
+                var note = document.getElementById('cd-note');
+                if (note) {
+                    var text = closed
+                        ? 'TPS Digital telah ditutup (9 Desember 2026)'
+                        : 'TPS Digital ditutup 9 Desember 2026 pukul 23:59 WIB';
+                    if (note.textContent.trim() !== text) note.textContent = text;
+                }
+                return closed;
+            }
+
+            function startCountdown() {
+                if (renderCountdown()) return;
+                var timer = setInterval(function () {
+                    if (renderCountdown()) clearInterval(timer);
                 }, 1000);
             }
 

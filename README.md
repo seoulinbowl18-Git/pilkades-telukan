@@ -26,6 +26,12 @@ Mode dipilih otomatis berdasarkan `/api/health`. Fitur simulasi (1-klik coblos, 
 
 ---
 
+## Batas Waktu TPS Digital
+
+- Hitung mundur di Beranda menuju **9 Desember 2026 pukul 23:59:59 WIB** (`2026-12-09T23:59:59+07:00`), sehari sebelum Pilkades 10 Desember 2026. Tampilannya HARI / JAM / MENIT / DETIK.
+- Setelah batas lewat, semua kotak menampilkan `00` dengan keterangan *"TPS Digital telah ditutup (9 Desember 2026)"*. Registrasi, verifikasi OTP, dan pemungutan suara ditolak, baik di halaman maupun di server (`/api/send-otp`, `/api/verify-otp`, `/api/vote` → `403 VOTING_CLOSED`). Halaman Hasil dan Panel Panitia tetap bisa dibuka.
+- Nilai batas ada di `lib/config.js` (`VOTING_DEADLINE_ISO`) dan `index.html` (`VOTING_DEADLINE_ISO`). Jika diubah, ubah keduanya. `/api/health` menampilkan `voting_deadline` dan `voting_closed`.
+
 ## Struktur File
 
 ```
