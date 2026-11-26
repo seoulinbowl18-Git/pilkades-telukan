@@ -6,9 +6,9 @@ const { validateCandidateUpdate, toPublicCandidate } = require('../lib/candidate
 const config = require('../lib/config');
 
 /**
- * /api/candidates — Profil 3 Calon Kepala Desa (koleksi `kandidat`)
+ * /api/candidates — Profil 2 Calon Kepala Desa (koleksi `kandidat`)
  *
- * GET : publik. Mengembalikan 3 profil (nama, slogan, visi, misi, foto).
+ * GET : publik. Mengembalikan 2 profil (nama, slogan, visi, misi, foto).
  *       Saat pertama dipakai, profil bawaan dari lib/config.js disalin ke database.
  * PUT : panitia (header x-admin-pin). Body: { kandidat_id, name?, tagline?, visi?, misi?, photo? }
  */
@@ -37,7 +37,8 @@ module.exports = async function handler(req, res) {
         }
 
         await seedDefaults(col);
-        const docs = await col.find({}, { projection: { _id: 0 } }).sort({ kandidat_id: 1 }).toArray();
+        const docs = (await col.find({}, { projection: { _id: 0 } }).sort({ kandidat_id: 1 }).toArray())
+            .filter(function (d) { return config.KANDIDAT_IDS.indexOf(d.kandidat_id) !== -1; });
         sendJson(res, 200, { ok: true, candidates: docs.map(toPublicCandidate) });
     } catch (err) {
         handleError(res, err);

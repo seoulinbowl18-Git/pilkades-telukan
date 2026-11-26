@@ -1,6 +1,6 @@
 # E-Pilkades Digital — Kelurahan Telukan, Grogol (Periode 2026–2034)
 
-Web app PWA polling warga dengan registrasi Nomor WhatsApp, OTP WhatsApp (via [Fonnte](https://fonnte.com)), bilik suara 3 kandidat, statistik hasil real-time, dan Panel Panitia (dilindungi PIN). Data tersimpan di **MongoDB Atlas**.
+Web app PWA polling warga dengan registrasi Nomor WhatsApp, OTP WhatsApp (via [Fonnte](https://fonnte.com)), bilik suara 2 kandidat, statistik hasil real-time, dan Panel Panitia (dilindungi PIN). Data tersimpan di **MongoDB Atlas**.
 
 > ⚠️ **Disclaimer:** Aplikasi ini **hanya survei/polling hiburan warga**, **bukan pemilihan resmi**. Hasilnya tidak memiliki kekuatan hukum apa pun.
 
@@ -28,7 +28,9 @@ Mode dipilih otomatis berdasarkan `/api/health`. Fitur simulasi (1-klik coblos, 
 
 ## Profil Kandidat (MongoDB)
 
-- Profil 3 kandidat (01 **Sriyanto**, 02 **Hesti Kartika Asmara**, 03 **Hj Trihadi Hari**) disimpan di koleksi `kandidat`. Saat pertama dipakai, koleksi ini diisi otomatis dari `KANDIDAT_DEFAULTS` di `lib/config.js`, tanpa pernah menimpa hasil edit panitia.
+> Kelurahan Telukan hanya memiliki **2 kandidat**. Kandidat lama ID 2 (Hesti Kartika Asmara) sudah dihapus. Saat server pertama kali diakses, `lib/migrations.js` otomatis menghapus profil dan suaranya, lalu mengembalikan status pemilihnya menjadi "belum mencoblos" agar bisa memilih ulang. Proses ini idempoten.
+
+- Profil 2 kandidat (01 **Sriyanto**, 02 **Hj Trihadi Hari** — ID internal 3) disimpan di koleksi `kandidat`. Saat pertama dipakai, koleksi ini diisi otomatis dari `KANDIDAT_DEFAULTS` di `lib/config.js`, tanpa pernah menimpa hasil edit panitia.
 - **Mode Online:** perubahan di Panel Panitia → *Pengaturan Foto & Profil 3 Kandidat* (nama, slogan, visi, URL/upload foto, reset foto) disimpan lewat `PUT /api/candidates` (header `x-admin-pin`) dan langsung berlaku untuk semua pengunjung. Halaman mengambil profil terbaru saat dibuka, saat pindah tab, dan tiap 30 detik.
 - Foto upload dikompres di browser (maks 320 px, JPEG). Server hanya menerima JPG/PNG/WEBP ≤ 200 KB, atau URL `https://…` / path `/…`.
 - **Mode Demo Lokal:** profil tetap disimpan di `localStorage` perangkat masing-masing.
@@ -72,13 +74,14 @@ Footer terdiri dari tiga bagian: disclaimer survei hiburan (huruf besar), banner
 │   ├── vote.js           # POST /api/vote       → rekam 1 suara per nomor WA
 │   ├── results.js        # GET  /api/results    → rekap suara (+ daftar pemilih untuk panitia)
 │   ├── messages.js       # GET/POST/DELETE /api/messages → pesan & harapan warga
-│   └── candidates.js     # GET/PUT /api/candidates → profil 3 kandidat (edit oleh panitia)
+│   └── candidates.js     # GET/PUT /api/candidates → profil 2 kandidat (edit oleh panitia)
 ├── lib/
 │   ├── mongodb.js        # Koneksi MongoDB ber-cache global (aman untuk serverless) + index koleksi
 │   ├── fonnte.js         # Kirim pesan WhatsApp via https://api.fonnte.com/send
 │   ├── http.js           # Helper JSON response, validasi, normalisasi nomor WA (62...)
 │   ├── messages.js       # Pembersihan teks pesan, penyamaran nama
 │   ├── candidates.js     # Validasi profil & foto kandidat
+│   ├── migrations.js     # Migrasi data otomatis (hapus kandidat ID 2 beserta suaranya)
 │   └── config.js         # Konstanta: ID kandidat, masa berlaku OTP, batas percobaan, dll.
 ├── package.json          # Dependency: mongodb
 ├── .env.example          # Contoh environment variables
@@ -91,8 +94,8 @@ Footer terdiri dari tiga bagian: disclaimer survei hiburan (huruf besar), banner
 |---|---|---|
 | `pemilih` | `nama_lengkap`, `no_wa` (format `62...`), `rt_rw`, `is_verified`, `verified_at`, `has_voted`, `voted_at`, `created_at` | `no_wa` **unik** |
 | `otp_verifications` | `no_wa`, `otp_hash`, `expires_at`, `consumed_at`, `attempt_count`, `created_at` | `no_wa + created_at`, TTL `expires_at` (dihapus otomatis 1 hari setelah kedaluwarsa) |
-| `suara` | `no_wa`, `kandidat_id` (1/2/3), `receipt_id`, `message_token_hash`, `created_at` | `no_wa` **unik**, `kandidat_id`, `receipt_id` unik |
-| `kandidat` | `kandidat_id` (1/2/3), `nomor`, `name`, `tagline`, `visi`, `misi[]`, `photo` (URL atau JPEG terkompresi ≤ 200 KB), `updated_at` | `kandidat_id` **unik** |
+| `suara` | `no_wa`, `kandidat_id` (1 atau 3), `receipt_id`, `message_token_hash`, `created_at` | `no_wa` **unik**, `kandidat_id`, `receipt_id` unik |
+| `kandidat` | `kandidat_id` (1/3), `nomor`, `name`, `tagline`, `visi`, `misi[]`, `photo` (URL atau JPEG terkompresi ≤ 200 KB), `updated_at` | `kandidat_id` **unik** |
 | `pesan_warga` | `message_id`, `receipt_id`, `no_wa` (internal), `nama_tampil`, `pesan`, `created_at`, `deleted_at` | `message_id` unik, `deleted_at + created_at`, `receipt_id + created_at` |
 
 ---

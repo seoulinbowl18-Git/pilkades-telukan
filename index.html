@@ -290,7 +290,7 @@
                         </div>
                     </div>
                     <div>
-                        <span class="text-2xl sm:text-3xl font-extrabold text-garuda-700">3</span>
+                        <span class="text-2xl sm:text-3xl font-extrabold text-garuda-700">2</span>
                         <p class="text-xs text-slate-500 mt-0.5">Calon Kepala Desa</p>
                     </div>
                 </div>
@@ -356,7 +356,7 @@
                         <div class="w-9 h-9 rounded-xl bg-garuda-700 text-white font-bold flex items-center justify-center shrink-0 shadow-sm">3</div>
                         <div>
                             <h4 class="font-bold text-sm text-slate-900">Coblos Kandidat di Bilik Suara</h4>
-                            <p class="text-xs text-slate-600 mt-1 leading-relaxed">Masuk menggunakan Nomor WhatsApp dan Token OTP, pilih 1 dari 3 Calon Kepala Desa, lalu simpan tanda bukti digital.</p>
+                            <p class="text-xs text-slate-600 mt-1 leading-relaxed">Masuk menggunakan Nomor WhatsApp dan Token OTP, pilih 1 dari 2 Calon Kepala Desa, lalu simpan tanda bukti digital.</p>
                         </div>
                     </div>
                 </div>
@@ -581,7 +581,7 @@
                 </form>
             </div>
 
-            <!-- STEP 3B: Surat Suara 3 Kandidat -->
+            <!-- STEP 3B: Surat Suara 2 Kandidat -->
             <div id="bilik-ballot-panel" class="hidden space-y-6">
                 <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
@@ -609,7 +609,7 @@
                 </div>
 
                 <!-- 3 Candidates Grid -->
-                <div id="candidates-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                <div id="candidates-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto w-full"></div>
             </div>
 
             <!-- STEP 3C: Tanda Bukti Partisipasi Digital (e-Receipt) -->
@@ -791,10 +791,10 @@
                 <!-- Candidate Photo & Profile Editor -->
                 <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6 space-y-4">
                     <div>
-                        <h3 class="font-bold text-lg text-slate-900">Pengaturan Foto &amp; Profil 3 Kandidat</h3>
+                        <h3 class="font-bold text-lg text-slate-900">Pengaturan Foto &amp; Profil 2 Kandidat</h3>
                         <p class="text-xs text-slate-500">Upload foto asli kandidat (otomatis dikompresi agar hemat penyimpanan), masukkan URL/path folder (misal <code class="bg-slate-100 px-1.5 py-0.5 rounded">/images/kandidat-1.jpg</code>), atau ubah profilnya. Di Mode Online perubahan disimpan ke database dan langsung berlaku untuk semua pengunjung.</p>
                     </div>
-                    <div id="admin-candidates-editor" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                    <div id="admin-candidates-editor" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
 
                 <!-- Voter Management Table (WhatsApp) -->
@@ -1216,14 +1216,6 @@
                         '</svg>';
                 } else if (number === '02') {
                     svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">' +
-                        '<circle cx="60" cy="60" r="60" fill="#d1fae5"/>' +
-                        '<path d="M22 114c5-24 19-38 38-38s33 14 38 38" fill="#065f46"/>' +
-                        '<path d="M36 48c0-15 11-26 24-26s24 11 24 26v28c-6 6-14 10-24 10s-18-4-24-10V48z" fill="#047857"/>' +
-                        '<circle cx="60" cy="49" r="18" fill="#fed7aa"/>' +
-                        '<path d="M44 64c4 5 10 8 16 8s12-3 16-8" stroke="#065f46" stroke-width="3" fill="none"/>' +
-                        '</svg>';
-                } else {
-                    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">' +
                         '<circle cx="60" cy="60" r="60" fill="#dbeafe"/>' +
                         '<path d="M24 114c4-22 18-36 36-36s32 14 36 36" fill="#1d4ed8"/>' +
                         '<path d="M46 78l14 16 14-16" fill="#f8fafc"/>' +
@@ -1232,6 +1224,14 @@
                         '<rect x="46" y="44" width="11" height="7" rx="2" stroke="#1e293b" stroke-width="2" fill="none"/>' +
                         '<rect x="63" y="44" width="11" height="7" rx="2" stroke="#1e293b" stroke-width="2" fill="none"/>' +
                         '<line x1="57" y1="47" x2="63" y2="47" stroke="#1e293b" stroke-width="2"/>' +
+                        '</svg>';
+                } else {
+                    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">' +
+                        '<circle cx="60" cy="60" r="60" fill="#d1fae5"/>' +
+                        '<path d="M22 114c5-24 19-38 38-38s33 14 38 38" fill="#065f46"/>' +
+                        '<path d="M36 48c0-15 11-26 24-26s24 11 24 26v28c-6 6-14 10-24 10s-18-4-24-10V48z" fill="#047857"/>' +
+                        '<circle cx="60" cy="49" r="18" fill="#fed7aa"/>' +
+                        '<path d="M44 64c4 5 10 8 16 8s12-3 16-8" stroke="#065f46" stroke-width="3" fill="none"/>' +
                         '</svg>';
                 }
                 return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
@@ -1272,26 +1272,11 @@
                     accent: 'from-red-700 to-red-600'
                 },
                 {
-                    id: 2,
-                    number: '02',
-                    name: 'Hesti Kartika Asmara',
-                    tagline: 'Bersama Warga Wujudkan Desa Cerdas & Peduli',
-                    photo: getDefaultAvatarDataUrl('02'),
-                    visi: 'Menjadikan Kelurahan Telukan, Grogol sebagai wilayah percontohan yang unggul di bidang pendidikan, kesehatan ibu-anak, dan lingkungan hijau.',
-                    misi: [
-                        'Program beasiswa prestasi untuk pelajar kurang mampu di setiap dusun.',
-                        'Peningkatan layanan Posyandu lansia dan balita serta ambulans desa siaga.',
-                        'Pengelolaan bank sampah terpadu berbasis RT/RW.'
-                    ],
-                    votes: 51,
-                    accent: 'from-emerald-700 to-emerald-600'
-                },
-                {
                     id: 3,
-                    number: '03',
+                    number: '02',
                     name: 'Hj Trihadi Hari',
                     tagline: 'Inovasi Pemuda untuk Kemajuan Ekonomi Desa',
-                    photo: getDefaultAvatarDataUrl('03'),
+                    photo: getDefaultAvatarDataUrl('02'),
                     visi: 'Akselerasi pembangunan infrastruktur modern, ketahanan pangan, dan penciptaan lapangan kerja bagi generasi muda Kelurahan Telukan.',
                     misi: [
                         'Pelatihan keterampilan digital dan kewirausahaan bagi karang taruna.',
@@ -1367,9 +1352,10 @@
                     var saved = localStorage.getItem(STORAGE_KEY);
                     if (saved) {
                         var parsed = JSON.parse(saved);
-                        if (parsed && Array.isArray(parsed.candidates) && parsed.candidates.length === 3) {
-                            appState.candidates = parsed.candidates.map(function (c, idx) {
-                                var base = defaultCandidates[idx];
+                        if (parsed && Array.isArray(parsed.candidates) && parsed.candidates.length > 0) {
+                            // Cocokkan berdasarkan id; kandidat yang sudah dihapus (id 2) otomatis terbuang
+                            appState.candidates = defaultCandidates.map(function (base) {
+                                var c = parsed.candidates.find(function (x) { return x && x.id === base.id; }) || {};
                                 // Nama bawaan versi lama diganti otomatis; nama hasil edit panitia tetap dipertahankan
                                 var savedName = LEGACY_DEFAULT_NAMES.indexOf(c.name) !== -1 ? base.name : c.name;
                                 return {
@@ -2491,8 +2477,7 @@
 
                 var barColors = {
                     '01': 'bg-garuda-600',
-                    '02': 'bg-green-600',
-                    '03': 'bg-blue-700'
+                    '02': 'bg-blue-700'
                 };
 
                 var html = '';
